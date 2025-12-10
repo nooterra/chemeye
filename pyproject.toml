@@ -1,0 +1,100 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "chemeye"
+version = "0.1.0"
+description = "Planetary Chemical Intelligence from Orbit"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "Aiden" }
+]
+keywords = ["hyperspectral", "remote-sensing", "methane", "satellite", "emit", "nasa"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+
+dependencies = [
+    # Core data
+    "earthaccess>=0.9.0",
+    "xarray>=2024.1.0",
+    "numpy>=1.26.0",
+    "h5netcdf>=1.3.0",
+    "netCDF4>=1.6.0",
+    
+    # API
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    
+    # Database
+    "sqlalchemy>=2.0.0",
+    
+    # HTTP
+    "requests>=2.31.0",
+    "httpx>=0.26.0",
+    
+    # Geospatial
+    "rioxarray>=0.15.0",
+    "geopandas>=0.14.0",
+    
+    # Utilities
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.8.0",
+    "httpx>=0.26.0",
+]
+modal = [
+    "modal>=0.56.0",
+]
+viz = [
+    "matplotlib>=3.8.0",
+    "scipy>=1.12.0",
+]
+
+[project.scripts]
+chemeye = "chemeye.cli:main"
+
+[project.urls]
+Homepage = "https://chemeye.io"
+Documentation = "https://docs.chemeye.io"
+Repository = "https://github.com/chemeye/chemeye"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/chemeye"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "B", "C4", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
