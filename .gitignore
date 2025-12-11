@@ -25,3 +25,10 @@ Thumbs.db
 
 # Modal
 .modal/
+
+# Node / Next.js
+chemical-eye-web/node_modules/
+chemical-eye-web/.next/
+chemical-eye-web/.turbo/
+chemical-eye-web/.vercel/
+chemical-eye-web/.env.local

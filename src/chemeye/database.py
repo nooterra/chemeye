@@ -25,8 +25,11 @@ class DetectionStatus(str, Enum):
     """Status of a detection request."""
 
     PENDING = "pending"
+    QUEUED = "queued"
     RUNNING = "running"
     COMPLETE = "complete"
+    CLEAR = "clear"
+    DETECTED = "detected"
     ERROR = "error"
 
 
@@ -92,6 +95,17 @@ class Detection(Base):
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="detections")
+
+
+class ProcessedGranule(Base):
+    """Record of an EMIT granule that has been processed by background workers."""
+
+    __tablename__ = "processed_granules"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    product: Mapped[str] = mapped_column(String(32), index=True)  # e.g., EMITL2ARFL
+    granule_ur: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    processed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 # Database engine and session

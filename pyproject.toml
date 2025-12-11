@@ -49,6 +49,10 @@ dependencies = [
     "rioxarray>=0.15.0",
     "geopandas>=0.14.0",
     
+    # Scientific computing (AMF)
+    "scipy>=1.11.0",
+    "scikit-learn>=1.4.0",
+    
     # Utilities
     "python-dotenv>=1.0.0",
 ]
