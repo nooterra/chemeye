@@ -344,6 +344,28 @@ def cron_scan_recent():
         process_granule_job.spawn(granule_ur, detection_id)
 
 
+@app.function(
+    image=image,
+    volumes={"/data": volume},
+    secrets=[modal.Secret.from_name("chemeye-secrets")],
+    schedule=modal.Cron("0 */6 * * *"),
+    timeout=900,
+)
+def cron_scan_tropomi():
+    """
+    Every 6 hours, ingest recent TROPOMI hotspots for global coverage.
+    """
+    import os
+    import sys
+
+    sys.path.insert(0, "/app")
+    os.environ.setdefault("DATABASE_URL", "sqlite:////data/chemeye.db")
+
+    from chemeye.workers import scan_tropomi_daily
+
+    scan_tropomi_daily(hours=6, max_granules=10)
+
+
 @app.local_entrypoint()
 def main():
     """Local entrypoint for testing."""
