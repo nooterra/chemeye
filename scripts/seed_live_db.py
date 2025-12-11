@@ -37,8 +37,9 @@ image = (
         "pydantic-settings>=2.1.0",
         "python-dotenv>=1.0.0",
     )
-    .add_local_dir("src", remote_path="/app", copy=True)
-    .env({"PYTHONPATH": "/app:/app/src"})
+    # Place the code under /root so imports work consistently
+    .add_local_dir("src", remote_path="/root/src", copy=True)
+    .env({"PYTHONPATH": "/root:/root/src"})
 )
 
 
