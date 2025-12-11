@@ -252,11 +252,8 @@
     <div id="cesiumContainer"></div>
 
     <script>
-        // Use ArcGIS World Imagery (no token needed, CORS-friendly)
+        // Initialize viewer with NO custom imagery - let Cesium use defaults
         const viewer = new Cesium.Viewer('cesiumContainer', {
-            imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
-                url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
-            }),
             baseLayerPicker: false,
             animation: false,
             timeline: false,
@@ -270,8 +267,15 @@
         });
 
         viewer.scene.backgroundColor = Cesium.Color.BLACK;
-        viewer.scene.globe.enableLighting = false;
         viewer.cesiumWidget.creditContainer.style.display = "none";
+
+        // Add TileMapService imagery (built into Cesium, no network needed)
+        viewer.imageryLayers.removeAll();
+        viewer.imageryLayers.addImageryProvider(
+            new Cesium.TileMapServiceImageryProvider({
+                url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+            })
+        );
 
         let isSpinning = false;
 
@@ -315,9 +319,7 @@
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error('API returned ' + response.status);
-                }
+                if (!response.ok) throw new Error('API returned ' + response.status);
 
                 const data = await response.json();
                 const plumes = data.detections || [];
@@ -326,8 +328,6 @@
                 if (plumes.length > 0) {
                     document.getElementById('status').innerHTML = '<div class="pulse"></div><span>' + plumes.length + ' threats identified</span>';
                     document.getElementById('status').classList.remove('loading');
-                } else {
-                    document.getElementById('status').innerHTML = '<span>No active threats</span>';
                 }
 
                 plumes.forEach(function (p, i) {
@@ -341,16 +341,11 @@
                             length: height,
                             topRadius: radius * 0.2,
                             bottomRadius: radius,
-                            material: Cesium.Color.fromCssColorString('#ff2222').withAlpha(0.8),
+                            material: Cesium.Color.RED.withAlpha(0.8),
                             outline: true,
                             outlineColor: Cesium.Color.RED,
                         },
-                        description: '<div style="padding:15px;background:#1a1a24;border-radius:8px;font-family:system-ui;">' +
-                            '<h2 style="color:#ff4444;margin:0 0 15px 0;">🚨 Methane Plume</h2>' +
-                            '<p><b>Size:</b> ' + p.plume_size_pixels + ' px</p>' +
-                            '<p><b>Lat:</b> ' + p.lat.toFixed(4) + '°</p>' +
-                            '<p><b>Lon:</b> ' + p.lon.toFixed(4) + '°</p>' +
-                            '<p><b>Date:</b> ' + (p.timestamp || '').split('T')[0] + '</p></div>'
+                        description: '<div style="padding:15px;background:#1a1a24;border-radius:8px;font-family:system-ui;"><h2 style="color:#ff4444;">🚨 Methane Plume</h2><p>Size: ' + p.plume_size_pixels + ' px</p><p>Location: ' + p.lat.toFixed(4) + '°, ' + p.lon.toFixed(4) + '°</p><p>Date: ' + (p.timestamp || '').split('T')[0] + '</p></div>'
                     });
 
                     viewer.entities.add({
@@ -358,50 +353,30 @@
                         ellipse: {
                             semiMinorAxis: radius * 3,
                             semiMajorAxis: radius * 3,
-                            material: Cesium.Color.fromCssColorString('#ff0000').withAlpha(0.2),
+                            material: Cesium.Color.RED.withAlpha(0.2),
                         }
                     });
                 });
 
                 if (plumes.length > 0) {
-                    setTimeout(function () {
-                        document.getElementById('btnPermian').click();
-                    }, 1500);
+                    setTimeout(function () { document.getElementById('btnPermian').click(); }, 1500);
                 }
-
             } catch (err) {
                 console.error('API Error:', err);
-                document.getElementById('status').innerHTML = '<span style="color:#ff6666;">Loading demo data...</span>';
-
-                // Demo fallback data
+                // Demo fallback
                 const demoPlumes = [
                     { lat: 31.98, lon: -103.09, plume_size_pixels: 749, timestamp: "2023-06-08" },
                     { lat: 31.31, lon: -103.20, plume_size_pixels: 199, timestamp: "2023-06-08" },
                     { lat: 31.76, lon: -103.51, plume_size_pixels: 111, timestamp: "2023-06-08" },
-                    { lat: 32.02, lon: -102.52, plume_size_pixels: 55, timestamp: "2023-06-08" },
-                    { lat: 31.41, lon: -103.32, plume_size_pixels: 79, timestamp: "2023-06-08" },
                 ];
-
                 document.getElementById('count').innerText = demoPlumes.length;
-                document.getElementById('status').innerHTML = '<div class="pulse"></div><span>' + demoPlumes.length + ' demo plumes</span>';
-
-                demoPlumes.forEach(function (p, i) {
-                    const height = p.plume_size_pixels * 80;
-                    const radius = p.plume_size_pixels * 3;
-
+                document.getElementById('status').innerHTML = '<div class="pulse"></div><span>Demo mode</span>';
+                demoPlumes.forEach(function (p) {
                     viewer.entities.add({
-                        position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, height / 2),
-                        cylinder: {
-                            length: height, topRadius: radius * 0.2, bottomRadius: radius,
-                            material: Cesium.Color.RED.withAlpha(0.8), outline: true, outlineColor: Cesium.Color.RED,
-                        }
-                    });
-                    viewer.entities.add({
-                        position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat),
-                        ellipse: { semiMinorAxis: radius * 3, semiMajorAxis: radius * 3, material: Cesium.Color.RED.withAlpha(0.2) }
+                        position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, p.plume_size_pixels * 40),
+                        cylinder: { length: p.plume_size_pixels * 80, topRadius: 200, bottomRadius: 1000, material: Cesium.Color.RED.withAlpha(0.8) }
                     });
                 });
-
                 setTimeout(function () { document.getElementById('btnPermian').click(); }, 1500);
             }
         }
