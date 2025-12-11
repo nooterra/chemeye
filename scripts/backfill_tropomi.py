@@ -67,7 +67,7 @@ if modal:
     )
     volume = modal.Volume.from_name("chemeye-data", create_if_missing=True)
 
-    @app.function(image=image, volumes={"/data": volume}, timeout=1800)
+    @app.function(image=image, volumes={"/data": volume}, timeout=1800, secrets=[modal.Secret.from_name("earthdata-netrc")])
     def run_backfill():
         main()
 
