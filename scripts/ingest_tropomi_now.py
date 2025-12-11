@@ -38,7 +38,7 @@ if modal:
     app = modal.App("chemeye-tropomi-ingest")
 
     image = (
-        modal.Image.from_dockerhub("python:3.11-slim")
+        modal.Image.debian_slim(python_version="3.11")
         .pip_install_from_requirements("requirements.txt")
         .env({"PYTHONPATH": "/root:/root/src", "DATABASE_URL": os.environ["DATABASE_URL"]})
     )
