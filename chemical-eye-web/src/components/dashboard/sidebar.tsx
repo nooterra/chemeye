@@ -77,7 +77,9 @@ export function Sidebar() {
               <div className="space-y-1">
                 <div className="flex items-center text-sm font-semibold text-zinc-200">
                   <AlertTriangle className="w-3 h-3 mr-2 text-yellow-500" />
-                  Methane Plume Detected
+                  {d.detection_type === "tropomi_hotspot"
+                    ? "Global Hotspot (TROPOMI)"
+                    : "Methane Plume Detected"}
                 </div>
                 <div className="flex items-center text-xs text-zinc-500 font-mono">
                   <LocateFixed className="w-3 h-3 mr-1" />

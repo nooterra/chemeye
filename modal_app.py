@@ -361,9 +361,9 @@ def cron_scan_tropomi():
     sys.path.insert(0, "/app")
     os.environ.setdefault("DATABASE_URL", "sqlite:////data/chemeye.db")
 
-    from chemeye.workers import scan_tropomi_daily
+    from chemeye.workers import update_global_map
 
-    scan_tropomi_daily(hours=6, max_granules=10)
+    update_global_map(hours=24)
 
 
 @app.local_entrypoint()

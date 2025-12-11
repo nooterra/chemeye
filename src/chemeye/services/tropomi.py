@@ -1,88 +1,78 @@
 """
-TROPOMI (Sentinel-5P) methane hotspot ingestion.
+Sentinel-5P (TROPOMI) methane hotspot ingestion.
 
-This pulls recent granules, filters for high-quality methane observations, and
-extracts hotspot centroids for persistence.
+This module searches daily granules, filters high-quality methane pixels, and
+clusters them into hotspots suitable for populating the global map (yellow
+layer). It intentionally keeps the interface minimal so workers can reuse it.
 """
 
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
-from typing import List, Tuple
+from datetime import date, datetime, timedelta
+from typing import List, Optional
 
 import earthaccess
 import numpy as np
 import xarray as xr
-from scipy.ndimage import label
+from sklearn.cluster import DBSCAN
 
 logger = logging.getLogger(__name__)
 
-TROPOMI_COLLECTION = "S5P_L2__CH4___"  # Sentinel-5P L2 Methane
+# ESA/NASA short name for Sentinel-5P methane L2
+COLLECTION_SHORTNAME = "S5P_L2__CH4___"
+
+# Thresholds
+BACKGROUND_THRESHOLD = 1850.0  # ppb
+QUALITY_THRESHOLD = 0.5  # qa_value
 
 
-def search_recent_tropomi_granules(hours: int = 24, count: int = 20):
-    """Search TROPOMI granules in the last `hours` globally."""
-    now = datetime.utcnow()
-    start = (now - timedelta(hours=hours)).isoformat() + "Z"
-    end = now.isoformat() + "Z"
-    logger.info("Searching TROPOMI granules from %s to %s", start, end)
-    granules = earthaccess.search_data(
-        short_name=TROPOMI_COLLECTION,
-        temporal=(start, end),
-        count=count,
-    )
-    logger.info("Found %d TROPOMI granules", len(granules))
-    return granules
+def _load_granule_dataset(granule) -> Optional[xr.Dataset]:
+    """Open a single TROPOMI granule via earthaccess."""
+    try:
+        files = earthaccess.open([granule])
+        if not files:
+            logger.warning("No files returned for TROPOMI granule")
+            return None
+        # h5netcdf is the usual engine for S5P L2
+        return xr.open_dataset(files[0], engine="h5netcdf")
+    except Exception as e:
+        logger.warning("Failed to open TROPOMI granule: %s", e)
+        return None
 
 
-def _extract_hotspots(ds: xr.Dataset, qa_min: float = 0.5, ch4_min: float = 1850.0) -> List[dict]:
+def _cluster_hotspots(lat: np.ndarray, lon: np.ndarray, ch4: np.ndarray) -> List[dict]:
     """
-    Extract hotspot centroids from a TROPOMI dataset.
-
-    Rules:
-      - qa_value > qa_min
-      - methane_mixing_ratio_bias_corrected > ch4_min (ppb)
-      - Keep only connected components with >= 3 pixels.
+    Cluster high methane pixels into hotspots using DBSCAN.
+    eps is in degrees (~5km). min_samples=3 filters speckle noise.
     """
-    required_vars = ["qa_value", "methane_mixing_ratio_bias_corrected", "latitude", "longitude"]
-    for v in required_vars:
-        if v not in ds:
-            logger.warning("Missing variable %s in TROPOMI dataset", v)
-            return []
-
-    qa = ds["qa_value"].values
-    ch4 = ds["methane_mixing_ratio_bias_corrected"].values
-    lat = ds["latitude"].values
-    lon = ds["longitude"].values
-
-    # Ensure shapes align
-    if qa.shape != ch4.shape or qa.shape != lat.shape or qa.shape != lon.shape:
-        logger.warning("Shape mismatch in TROPOMI variables")
+    coords = np.column_stack((lon, lat))  # lon, lat order for eps degrees
+    if coords.shape[0] == 0:
         return []
 
-    mask = (qa > qa_min) & (ch4 > ch4_min) & np.isfinite(ch4) & np.isfinite(lat) & np.isfinite(lon)
-    if not mask.any():
-        return []
-
-    labeled, num_features = label(mask)
+    model = DBSCAN(eps=0.05, min_samples=3, metric="euclidean")
+    labels = model.fit_predict(coords)
     hotspots: list[dict] = []
 
-    for i in range(1, num_features + 1):
-        component = labeled == i
-        count = int(component.sum())
-        if count < 3:
+    for label in np.unique(labels):
+        if label == -1:
+            continue  # noise
+        mask = labels == label
+        if not np.any(mask):
             continue
 
-        # Centroid
-        lat_vals = lat[component]
-        lon_vals = lon[component]
-        ch4_vals = ch4[component]
+        lons = lon[mask]
+        lats = lat[mask]
+        vals = ch4[mask]
 
-        centroid_lat = float(np.nanmean(lat_vals))
-        centroid_lon = float(np.nanmean(lon_vals))
-        mean_ppb = float(np.nanmean(ch4_vals))
-        max_ppb = float(np.nanmax(ch4_vals))
+        centroid_lon = float(np.nanmean(lons))
+        centroid_lat = float(np.nanmean(lats))
+        mean_ppb = float(np.nanmean(vals))
+        max_ppb = float(np.nanmax(vals))
+        count = int(mask.sum())
+
+        # Map ppb to a rough z-score-ish scale for consistent UI intensity
+        z_score = max(0.0, (max_ppb - 1800.0) / 10.0)
 
         hotspots.append(
             {
@@ -91,41 +81,75 @@ def _extract_hotspots(ds: xr.Dataset, qa_min: float = 0.5, ch4_min: float = 1850
                 "pixel_count": count,
                 "mean_ppb": mean_ppb,
                 "max_ppb": max_ppb,
+                "z_score": z_score,
             }
         )
 
-    logger.info("Extracted %d hotspots from TROPOMI granule", len(hotspots))
     return hotspots
 
 
-def process_tropomi_granule(granule) -> List[dict]:
-    """Open a TROPOMI granule and return hotspot dicts with metadata."""
-    try:
-        files = earthaccess.open([granule])
-        if not files:
-            logger.warning("No files returned for TROPOMI granule")
-            return []
-        ds = xr.open_dataset(files[0], engine="h5netcdf")
-    except Exception as e:
-        logger.warning(f"Failed to open TROPOMI granule: {e}")
+def _extract_hotspots(ds: xr.Dataset) -> List[dict]:
+    """Filter QA, apply background threshold, and cluster."""
+    required = ["qa_value", "methane_mixing_ratio_bias_corrected", "latitude", "longitude"]
+    if not all(v in ds for v in required):
+        missing = [v for v in required if v not in ds]
+        logger.warning("TROPOMI dataset missing variables: %s", missing)
         return []
 
-    hotspots = _extract_hotspots(ds)
+    qa = ds["qa_value"].values
+    ch4 = ds["methane_mixing_ratio_bias_corrected"].values
+    lat = ds["latitude"].values
+    lon = ds["longitude"].values
 
-    # Timestamp from dataset or granule metadata
-    timestamp = None
-    if "time" in ds.coords:
-        try:
-            timestamp = np.datetime64(ds["time"].values).astype("datetime64[s]").astype(str)
-        except Exception:
-            timestamp = None
-    if not timestamp:
-        timestamp = datetime.utcnow().isoformat()
+    mask = (
+        (qa > QUALITY_THRESHOLD)
+        & (ch4 > BACKGROUND_THRESHOLD)
+        & np.isfinite(ch4)
+        & np.isfinite(lat)
+        & np.isfinite(lon)
+    )
+    if not mask.any():
+        return []
 
-    granule_ur = granule["umm"]["GranuleUR"] if "umm" in granule else ""
+    return _cluster_hotspots(lat[mask], lon[mask], ch4[mask])
 
-    enriched = []
-    for h in hotspots:
-        h["timestamp"] = timestamp
-        h["granule_ur"] = granule_ur
+
+def search_daily_hotspots(day: date) -> List[dict]:
+    """
+    Find TROPOMI methane hotspots for a given UTC date.
+
+    Returns a list of dicts with lat/lon/z_score/ppb metadata plus granule/timestamp.
+    """
+    start = datetime.combine(day, datetime.min.time()).isoformat() + "Z"
+    end = (datetime.combine(day, datetime.min.time()) + timedelta(days=1)).isoformat() + "Z"
+    granules = earthaccess.search_data(short_name=COLLECTION_SHORTNAME, temporal=(start, end))
+
+    logger.info("Found %d TROPOMI granules for %s", len(granules), day.isoformat())
+
+    hotspots: list[dict] = []
+
+    for g in granules:
+        ds = _load_granule_dataset(g)
+        if ds is None:
+            continue
+
+        granule_ur = g.get("umm", {}).get("GranuleUR", "")
+
+        ts = None
+        if "time" in ds.coords:
+            try:
+                ts = np.datetime64(ds["time"].values).astype("datetime64[s]").astype(str)
+            except Exception:
+                ts = None
+        if not ts:
+            ts = datetime.utcnow().isoformat()
+
+        for h in _extract_hotspots(ds):
+            h["granule_ur"] = granule_ur
+            h["timestamp"] = ts
+            hotspots.append(h)
+
+        ds.close()
+
+    logger.info("Extracted %d hotspots for %s", len(hotspots), day.isoformat())
     return hotspots

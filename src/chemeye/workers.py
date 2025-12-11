@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from typing import Sequence
 
 import earthaccess
+from sqlalchemy import and_
 
 from .database import Detection, DetectionStatus, ProcessedGranule, get_session_maker
 from .services.emit import REFLECTANCE_PRODUCT
@@ -100,6 +101,110 @@ def scan_recent_granules(hours: int = 24) -> list[tuple[str, str]]:
         logger.info("Queued %d new granule detection jobs", len(jobs))
         return jobs
 
+    finally:
+        db.close()
+
+
+def update_global_map(hours: int = 24) -> None:
+    """
+    Refresh global hotspots from TROPOMI for the last `hours`.
+
+    - Pull hotspots for today (UTC) and optionally previous hours window.
+    - Deduplicate by proximity (~0.05 deg) and day.
+    - Mark very old hotspots (>48h) as CLEAR to declutter.
+    """
+    SessionLocal = get_session_maker()
+    db = SessionLocal()
+
+    try:
+        today = datetime.utcnow().date()
+        hotspots = tropomi.search_daily_hotspots(today)
+
+        # optional lookback within the same date range
+        if hours > 24:
+            earlier = today - timedelta(days=1)
+            hotspots += tropomi.search_daily_hotspots(earlier)
+
+        if not hotspots:
+            logger.info("No hotspots found for %s", today.isoformat())
+            return
+
+        existing = db.query(Detection).filter(Detection.detection_type == "tropomi_hotspot").all()
+
+        new_count = 0
+        for h in hotspots:
+            lat = h.get("lat")
+            lon = h.get("lon")
+            if lat is None or lon is None:
+                continue
+
+            # Deduplicate: if an existing hotspot within ~0.05 deg and same day, skip
+            already = False
+            for det in existing:
+                bbox = det.bbox_json or {}
+                if (
+                    bbox
+                    and abs((bbox.get("min_lat", 0) + bbox.get("max_lat", 0)) / 2 - lat) < 0.05
+                    and abs((bbox.get("min_lon", 0) + bbox.get("max_lon", 0)) / 2 - lon) < 0.05
+                    and det.start_date == today.isoformat()
+                ):
+                    already = True
+                    break
+            if already:
+                continue
+
+            bbox_delta = 0.05  # ~5km
+            bbox = {
+                "min_lon": lon - bbox_delta,
+                "min_lat": lat - bbox_delta,
+                "max_lon": lon + bbox_delta,
+                "max_lat": lat + bbox_delta,
+            }
+
+            det = Detection(
+                user_id="system",
+                detection_type="tropomi_hotspot",
+                bbox_json=bbox,
+                start_date=today.isoformat(),
+                end_date=today.isoformat(),
+                status=DetectionStatus.DETECTED.value,
+                result_json={
+                    "granule_ur": h.get("granule_ur", ""),
+                    "max_ppb": h.get("max_ppb"),
+                    "mean_ppb": h.get("mean_ppb"),
+                    "pixel_count": h.get("pixel_count"),
+                    "timestamp": h.get("timestamp"),
+                    "plumes": [
+                        {
+                            "lat": lat,
+                            "lon": lon,
+                            "z_score": h.get("z_score"),
+                            "pixel_count": h.get("pixel_count"),
+                        }
+                    ],
+                },
+            )
+            # max_z_score analog
+            det.result_json["max_z_score"] = h.get("z_score")
+            db.add(det)
+            new_count += 1
+
+        # Prune/clear hotspots older than 48h to keep map fresh
+        cutoff = datetime.utcnow() - timedelta(hours=48)
+        cleared = (
+            db.query(Detection)
+            .filter(
+                Detection.detection_type == "tropomi_hotspot",
+                Detection.created_at < cutoff,
+                Detection.status == DetectionStatus.DETECTED.value,
+            )
+            .update({Detection.status: DetectionStatus.CLEAR.value})
+        )
+
+        if new_count or cleared:
+            db.commit()
+
+        logger.info("TROPOMI update: %d new hotspots, %d cleared", new_count, cleared)
     finally:
         db.close()
 
