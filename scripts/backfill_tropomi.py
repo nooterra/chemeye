@@ -29,6 +29,12 @@ LOOKBACK_DAYS = 14
 
 def main():
     from chemeye.workers import update_global_map
+    import earthaccess
+
+    try:
+        earthaccess.login()
+    except Exception as e:
+        print(f"⚠️ earthaccess login failed: {e}")
 
     today = datetime.utcnow().date()
     found = False
