@@ -183,9 +183,8 @@
     <div id="cesiumContainer"></div>
 
     <script>
-        // Initialize Cesium Globe
+        // Initialize Cesium Globe (no Ion token required)
         const viewer = new Cesium.Viewer('cesiumContainer', {
-            terrainProvider: Cesium.createWorldTerrain(),
             baseLayerPicker: false,
             animation: false,
             timeline: false,
@@ -194,11 +193,15 @@
             sceneModePicker: false,
             navigationHelpButton: false,
             fullscreenButton: false,
+            imageryProvider: new Cesium.TileMapServiceImageryProvider({
+                url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+            }),
         });
 
         // Dark mode atmosphere
-        viewer.scene.globe.enableLighting = true;
+        viewer.scene.globe.enableLighting = false;
         viewer.scene.backgroundColor = Cesium.Color.BLACK;
+        viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#1a1a24');
 
         // Remove credit container for clean look
         viewer.cesiumWidget.creditContainer.style.display = "none";
