@@ -34,7 +34,7 @@ image = (
         "pydantic-settings>=2.1.0",
         "python-dotenv>=1.0.0",
     )
-    .add_local_dir("src/chemeye", remote_path="/app/chemeye", copy=True)
+    .add_local_dir("src", remote_path="/app", copy=True)
 )
 
 
