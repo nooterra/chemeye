@@ -29,11 +29,22 @@ def main():
     Session = get_session_maker()
     db = Session()
     try:
-        seed_deleted = (
-            db.query(Detection)
-            .filter(Detection.granule_ur.like("TEST-SEED%"))
-            .delete(synchronize_session=False)
-        )
+        seed_ids = []
+        for det in db.query(Detection).filter(
+            Detection.detection_type.in_(["methane_amf", "methane"])
+        ):
+            gran = None
+            if det.result_json:
+                gran = det.result_json.get("granule_ur")
+            if gran and str(gran).startswith("TEST-SEED"):
+                seed_ids.append(det.id)
+        seed_deleted = 0
+        if seed_ids:
+            seed_deleted = (
+                db.query(Detection)
+                .filter(Detection.id.in_(seed_ids))
+                .delete(synchronize_session=False)
+            )
         tropomi_deleted = (
             db.query(Detection)
             .filter(Detection.detection_type == "tropomi_hotspot")
