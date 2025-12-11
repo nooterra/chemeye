@@ -107,7 +107,8 @@ def seed():
 
         db.add(detection)
         db.commit()
-        print(f"✅ Inserted Detection ID: {detection_id}")
+        count = db.query(Detection).count()
+        print(f"✅ Inserted Detection ID: {detection_id} (total detections: {count})")
 
     finally:
         db.close()
@@ -116,3 +117,26 @@ def seed():
 @app.local_entrypoint()
 def main():
     seed.remote()
+
+
+@app.function(
+    image=image,
+    volumes={"/data": volume},
+    secrets=[modal.Secret.from_name("chemeye-secrets")],
+)
+def inspect():
+    db_url = os.environ.get("DATABASE_URL", "sqlite:////data/chemeye.db")
+    engine = create_engine(
+        db_url,
+        connect_args={"check_same_thread": False} if "sqlite" in db_url else {},
+    )
+    Session = sessionmaker(bind=engine)
+    db = Session()
+    try:
+        n = db.query(Detection).count()
+        print(f"Detections in DB: {n}")
+        rows = db.query(Detection).order_by(Detection.created_at.desc()).limit(5).all()
+        for r in rows:
+            print(f"- {r.id} type={r.detection_type} status={r.status}")
+    finally:
+        db.close()
