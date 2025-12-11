@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <title>Chemical Eye | Global Intelligence</title>
+    <!-- Use reliable CDN -->
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.111/Build/Cesium/Cesium.js"></script>
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.111/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <style>
@@ -14,12 +15,12 @@
             height: 100%;
             overflow: hidden;
             font-family: 'Inter', sans-serif;
+            background: #000;
         }
 
         #cesiumContainer {
             width: 100%;
             height: 100%;
-            background: #0a0a0f;
         }
 
         #ui {
@@ -27,13 +28,14 @@
             top: 20px;
             left: 20px;
             z-index: 100;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(10, 10, 16, 0.9);
             color: #fff;
             padding: 24px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 68, 68, 0.4);
-            min-width: 220px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            backdrop-filter: blur(10px);
+            min-width: 240px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
         }
 
         .logo {
@@ -44,49 +46,44 @@
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #ff4444, #ff6666);
-            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            background: #ff4444;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .logo svg {
-            width: 24px;
-            height: 24px;
-        }
-
         h1 {
             margin: 0;
-            font-size: 20px;
-            letter-spacing: 2px;
-            color: #ff4444;
+            font-size: 18px;
+            letter-spacing: 1px;
+            color: #fff;
+            font-weight: 600;
             text-transform: uppercase;
-            font-weight: 700;
         }
 
         .subtitle {
-            margin: 4px 0 0 0;
             font-size: 10px;
-            color: #666;
+            color: #ff6666;
+            margin-top: 2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
         }
 
         .stat-container {
-            margin-top: 24px;
-            padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            margin-top: 20px;
         }
 
         .stat {
-            font-size: 64px;
-            font-weight: 800;
+            font-size: 56px;
+            font-weight: 700;
             color: #ff4444;
             line-height: 1;
-            text-shadow: 0 0 40px rgba(255, 68, 68, 0.5);
+            letter-spacing: -1px;
         }
 
         .stat-label {
@@ -99,39 +96,40 @@
 
         .status {
             margin-top: 20px;
-            padding: 10px 14px;
-            background: rgba(255, 68, 68, 0.15);
-            border-radius: 8px;
-            font-size: 12px;
-            color: #ff6666;
+            padding: 8px 12px;
+            background: rgba(255, 68, 68, 0.1);
+            border-radius: 6px;
+            font-size: 11px;
+            color: #ff8888;
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-
-        .status.loading {
-            color: #888;
-            background: rgba(255, 255, 255, 0.05);
+            gap: 8px;
+            border: 1px solid rgba(255, 68, 68, 0.2);
         }
 
         .pulse {
-            width: 10px;
-            height: 10px;
+            width: 6px;
+            height: 6px;
             background: #ff4444;
             border-radius: 50%;
-            animation: pulse 1.5s infinite;
-            box-shadow: 0 0 10px #ff4444;
+            box-shadow: 0 0 8px #ff4444;
+            animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
-
-            0%,
-            100% {
+            0% {
                 opacity: 1;
+                transform: scale(1);
             }
 
             50% {
                 opacity: 0.5;
+                transform: scale(1.5);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
             }
         }
 
@@ -142,25 +140,35 @@
             transform: translateX(-50%);
             z-index: 100;
             display: flex;
-            gap: 12px;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid #333;
         }
 
         .control-btn {
-            background: rgba(0, 0, 0, 0.9);
-            color: #fff;
-            padding: 14px 24px;
-            border-radius: 10px;
+            background: #1a1a24;
+            color: #ddd;
             border: 1px solid #333;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
             transition: all 0.2s;
-            font-family: inherit;
         }
 
         .control-btn:hover {
-            background: rgba(255, 68, 68, 0.2);
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+
+        .control-btn.active {
+            background: #ff4444;
+            color: #fff;
             border-color: #ff4444;
         }
 
@@ -169,44 +177,19 @@
             top: 20px;
             right: 20px;
             z-index: 100;
-            background: rgba(0, 0, 0, 0.9);
-            color: #fff;
-            padding: 14px 24px;
-            border-radius: 10px;
-            border: 1px solid #333;
+            color: #aaa;
             text-decoration: none;
             font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #333;
+            transition: all 0.2s;
         }
 
         #back:hover {
-            background: rgba(255, 68, 68, 0.2);
-            border-color: #ff4444;
-        }
-
-        #info {
-            position: absolute;
-            bottom: 100px;
-            right: 20px;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.9);
             color: #fff;
-            padding: 16px 20px;
-            border-radius: 10px;
-            border: 1px solid #333;
-            font-size: 11px;
-        }
-
-        #info h3 {
-            margin: 0 0 8px 0;
-            color: #ff4444;
-            font-size: 13px;
-        }
-
-        #info p {
-            margin: 4px 0;
-            color: #888;
+            border-color: #666;
         }
     </style>
 </head>
@@ -215,100 +198,165 @@
     <div id="ui">
         <div class="logo">
             <div class="logo-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
                     <circle cx="12" cy="12" r="10" />
                     <circle cx="12" cy="12" r="3" />
                 </svg>
             </div>
             <div>
                 <h1>Chemical Eye</h1>
-                <p class="subtitle">Orbital Methane Intelligence</p>
+                <div class="subtitle">Orbital Methane Intelligence</div>
             </div>
         </div>
         <div class="stat-container">
             <div class="stat" id="count">—</div>
-            <p class="stat-label">Active Plumes Detected</p>
+            <div class="stat-label">Active Plumes Detected</div>
         </div>
-        <div class="status loading" id="status">
+        <div class="status" id="status">
             <div class="pulse"></div>
-            <span>Scanning orbital data...</span>
+            <span>Initializing Uplink...</span>
         </div>
     </div>
 
-    <a href="index.html" id="back">← Back to Home</a>
+    <a href="index.html" id="back">Exit War Room</a>
 
     <div id="controls">
-        <button class="control-btn" id="btnPermian">🎯 Permian Basin</button>
-        <button class="control-btn" id="btnGlobal">🌍 Global View</button>
-        <button class="control-btn" id="btnSpin">🔄 Auto Rotate</button>
-    </div>
-
-    <div id="info">
-        <h3>📍 Controls</h3>
-        <p>🖱️ Left drag: Rotate | Right drag: Pan</p>
-        <p>🔍 Scroll: Zoom | 👆 Click: Details</p>
+        <button class="control-btn" onclick="flyPermian()">🎯 Permian</button>
+        <button class="control-btn" onclick="flyGlobal()">🌍 Global</button>
+        <button class="control-btn" id="btnSpin" onclick="toggleSpin()">🔄 Rotate</button>
     </div>
 
     <div id="cesiumContainer"></div>
 
     <script>
-        // Initialize viewer with NO custom imagery - let Cesium use defaults
+        // 1. Initialize viewer with ROBUST defaults
+        // Using ArcGIS World Imagery = standard for reliable free satellite capability
         const viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+                url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+            }),
             baseLayerPicker: false,
-            animation: false,
-            timeline: false,
             geocoder: false,
             homeButton: false,
-            sceneModePicker: false,
-            navigationHelpButton: false,
-            fullscreenButton: false,
             infoBox: true,
+            sceneModePicker: false,
             selectionIndicator: true,
+            timeline: false,
+            animation: false,
+            navigationHelpButton: false,
+            // Sky and Atmosphere enabled for "Wow" factor
+            skyAtmosphere: new Cesium.SkyAtmosphere(),
+            skyBox: new Cesium.SkyBox({
+                sources: {
+                    positiveX: 'https://cesium.com/downloads/cesiumjs/releases/1.111/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_px.jpg',
+                    negativeX: 'https://cesium.com/downloads/cesiumjs/releases/1.111/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_mx.jpg',
+                    positiveY: 'https://cesium.com/downloads/cesiumjs/releases/1.111/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_py.jpg',
+                    negativeY: 'https://cesium.com/downloads/cesiumjs/releases/1.111/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_my.jpg',
+                    positiveZ: 'https://cesium.com/downloads/cesiumjs/releases/1.111/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_pz.jpg',
+                    negativeZ: 'https://cesium.com/downloads/cesiumjs/releases/1.111/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_mz.jpg'
+                }
+            })
         });
 
-        viewer.scene.backgroundColor = Cesium.Color.BLACK;
+        // 2. Ensure Interactivity & Style
+        viewer.scene.globe.enableLighting = true; // Sun lighting
         viewer.cesiumWidget.creditContainer.style.display = "none";
 
-        // Add TileMapService imagery (built into Cesium, no network needed)
-        viewer.imageryLayers.removeAll();
-        viewer.imageryLayers.addImageryProvider(
-            new Cesium.TileMapServiceImageryProvider({
-                url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
-            })
-        );
+        // Unlock camera just in case
+        viewer.scene.screenSpaceCameraController.enableZoom = true;
+        viewer.scene.screenSpaceCameraController.enableRotate = true;
+        viewer.scene.screenSpaceCameraController.enableTilt = true;
+        viewer.scene.screenSpaceCameraController.maximumZoomDistance = 20000000; // Allow full zoom out
+
+        // 3. Data Loading Logic
+        const API_URL = "https://aidenlippert--chemeye-fastapi-app.modal.run/v1/detect/methane";
+        const API_KEY = "chem_live_84b7d1107e0542c4af00e33cccaefa567d336c7a4f25637a";
 
         let isSpinning = false;
 
-        document.getElementById('btnPermian').onclick = function () {
-            viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(-103, 31.5, 300000),
-                orientation: { heading: 0, pitch: Cesium.Math.toRadians(-45), roll: 0 },
-                duration: 2
-            });
-        };
-
-        document.getElementById('btnGlobal').onclick = function () {
-            viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(-100, 35, 5000000),
-                duration: 2
-            });
-        };
-
-        document.getElementById('btnSpin').onclick = function () {
+        function toggleSpin() {
             isSpinning = !isSpinning;
-            this.style.background = isSpinning ? '#ff4444' : '';
-        };
+            const btn = document.getElementById('btnSpin');
+            if (isSpinning) {
+                btn.classList.add('active');
+                viewer.clock.onTick.addEventListener(spinGlobe);
+            } else {
+                btn.classList.remove('active');
+                viewer.clock.onTick.removeEventListener(spinGlobe);
+            }
+        }
 
-        viewer.clock.onTick.addEventListener(function () {
-            if (isSpinning) viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, 0.002);
-        });
+        function spinGlobe(clock) {
+            viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, 0.001);
+        }
 
-        async function loadPlumes() {
-            const API_URL = "https://aidenlippert--chemeye-fastapi-app.modal.run/v1/detect/methane";
-            const API_KEY = "chem_live_84b7d1107e0542c4af00e33cccaefa567d336c7a4f25637a";
+        function flyPermian() {
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(-103.5, 31.5, 400000), // Height 400km
+                orientation: { heading: 0, pitch: Cesium.Math.toRadians(-60), roll: 0 },
+                duration: 2
+            });
+        }
+
+        function flyGlobal() {
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(-98, 35, 10000000), // Height 10,000km
+                duration: 2
+            });
+        }
+
+        function renderPlumes(plumes) {
+            if (!plumes || plumes.length === 0) return;
+
+            plumes.forEach((p, idx) => {
+                const size = p.plume_size_pixels || 100;
+                const lat = p.lat;
+                const lon = p.lon;
+
+                // Visual sizing
+                const height = Math.min(size * 100, 100000);
+                const width = Math.min(size * 10, 5000);
+
+                // 1. The Pillar
+                viewer.entities.add({
+                    name: `Plume detected ${p.timestamp.split('T')[0]}`,
+                    position: Cesium.Cartesian3.fromDegrees(lon, lat, height / 2.0),
+                    cylinder: {
+                        length: height,
+                        topRadius: width,
+                        bottomRadius: width,
+                        material: new Cesium.ColorMaterialProperty(Cesium.Color.RED.withAlpha(0.6)),
+                        outline: true,
+                        outlineColor: Cesium.Color.RED,
+                        outlineWidth: 2
+                    },
+                    description: `
+            <div style="font-family:sans-serif; padding:10px;">
+              <h3 style="color:red;margin:0;">⚠ METHANE CONFIRMED</h3>
+              <p><b>Size:</b> ${size} pixels</p>
+              <p><b>Coordinates:</b> ${lat.toFixed(4)}, ${lon.toFixed(4)}</p>
+              <p><b>Granule:</b> ${p.granule_id}</p>
+            </div>
+          `
+                });
+
+                // 2. The Base Glow
+                viewer.entities.add({
+                    position: Cesium.Cartesian3.fromDegrees(lon, lat),
+                    ellipse: {
+                        semiMinorAxis: width * 3,
+                        semiMajorAxis: width * 3,
+                        material: new Cesium.ColorMaterialProperty(Cesium.Color.RED.withAlpha(0.3))
+                    }
+                });
+            });
+        }
+
+        async function init() {
+            document.getElementById('status').innerHTML = '<div class="pulse"></div> Using Live Production Feed...';
 
             try {
-                const response = await fetch(API_URL, {
+                const resp = await fetch(API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
                     body: JSON.stringify({
@@ -319,70 +367,39 @@
                     })
                 });
 
-                if (!response.ok) throw new Error('API returned ' + response.status);
-
-                const data = await response.json();
+                const data = await resp.json();
                 const plumes = data.detections || [];
 
                 document.getElementById('count').innerText = plumes.length;
-                if (plumes.length > 0) {
-                    document.getElementById('status').innerHTML = '<div class="pulse"></div><span>' + plumes.length + ' threats identified</span>';
-                    document.getElementById('status').classList.remove('loading');
-                }
-
-                plumes.forEach(function (p, i) {
-                    const height = Math.min(Math.max(p.plume_size_pixels * 80, 3000), 100000);
-                    const radius = Math.min(Math.max(p.plume_size_pixels * 3, 300), 3000);
-
-                    viewer.entities.add({
-                        name: 'Plume ' + (i + 1),
-                        position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, height / 2),
-                        cylinder: {
-                            length: height,
-                            topRadius: radius * 0.2,
-                            bottomRadius: radius,
-                            material: Cesium.Color.RED.withAlpha(0.8),
-                            outline: true,
-                            outlineColor: Cesium.Color.RED,
-                        },
-                        description: '<div style="padding:15px;background:#1a1a24;border-radius:8px;font-family:system-ui;"><h2 style="color:#ff4444;">🚨 Methane Plume</h2><p>Size: ' + p.plume_size_pixels + ' px</p><p>Location: ' + p.lat.toFixed(4) + '°, ' + p.lon.toFixed(4) + '°</p><p>Date: ' + (p.timestamp || '').split('T')[0] + '</p></div>'
-                    });
-
-                    viewer.entities.add({
-                        position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat),
-                        ellipse: {
-                            semiMinorAxis: radius * 3,
-                            semiMajorAxis: radius * 3,
-                            material: Cesium.Color.RED.withAlpha(0.2),
-                        }
-                    });
-                });
 
                 if (plumes.length > 0) {
-                    setTimeout(function () { document.getElementById('btnPermian').click(); }, 1500);
+                    renderPlumes(plumes);
+                    document.getElementById('status').innerText = 'System Active - Threats Displayed';
+                    document.getElementById('status').style.color = '#4ade80';
+                    document.getElementById('status').style.borderColor = '#4ade80';
+                    // Auto fly to first view
+                    setTimeout(flyPermian, 2000);
+                } else {
+                    document.getElementById('status').innerText = 'No detections in current view';
                 }
-            } catch (err) {
-                console.error('API Error:', err);
-                // Demo fallback
-                const demoPlumes = [
-                    { lat: 31.98, lon: -103.09, plume_size_pixels: 749, timestamp: "2023-06-08" },
-                    { lat: 31.31, lon: -103.20, plume_size_pixels: 199, timestamp: "2023-06-08" },
-                    { lat: 31.76, lon: -103.51, plume_size_pixels: 111, timestamp: "2023-06-08" },
+
+            } catch (e) {
+                console.error("API error", e);
+                document.getElementById('status').innerText = 'Offline Mode - Visualizing Demo Data';
+
+                // FALLBACK DEMO
+                const demo = [
+                    { lat: 31.98, lon: -103.09, plume_size_pixels: 750, timestamp: "2023-06-08T00:00:00", granule_id: "DEMO-1" },
+                    { lat: 31.5, lon: -103.2, plume_size_pixels: 300, timestamp: "2023-06-08T00:00:00", granule_id: "DEMO-2" },
+                    { lat: 31.7, lon: -102.9, plume_size_pixels: 500, timestamp: "2023-06-08T00:00:00", granule_id: "DEMO-3" },
                 ];
-                document.getElementById('count').innerText = demoPlumes.length;
-                document.getElementById('status').innerHTML = '<div class="pulse"></div><span>Demo mode</span>';
-                demoPlumes.forEach(function (p) {
-                    viewer.entities.add({
-                        position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, p.plume_size_pixels * 40),
-                        cylinder: { length: p.plume_size_pixels * 80, topRadius: 200, bottomRadius: 1000, material: Cesium.Color.RED.withAlpha(0.8) }
-                    });
-                });
-                setTimeout(function () { document.getElementById('btnPermian').click(); }, 1500);
+                document.getElementById('count').innerText = "3 (DEMO)";
+                renderPlumes(demo);
+                setTimeout(flyPermian, 1000);
             }
         }
 
-        viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-100, 35, 8000000) });
-        setTimeout(loadPlumes, 500);
+        init();
     </script>
 </body>
 
