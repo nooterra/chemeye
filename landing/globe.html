@@ -28,20 +28,31 @@
             top: 20px;
             left: 20px;
             z-index: 100;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             color: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 68, 68, 0.3);
-            backdrop-filter: blur(10px);
-            min-width: 200px;
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 68, 68, 0.4);
+            backdrop-filter: blur(20px);
+            min-width: 220px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff4444, #ff6666);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .logo svg {
@@ -51,32 +62,33 @@
 
         h1 {
             margin: 0;
-            font-size: 18px;
+            font-size: 20px;
             letter-spacing: 2px;
             color: #ff4444;
             text-transform: uppercase;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .subtitle {
-            margin: 0;
-            font-size: 11px;
+            margin: 4px 0 0 0;
+            font-size: 10px;
             color: #666;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
 
         .stat-container {
-            margin-top: 20px;
-            padding-top: 15px;
+            margin-top: 24px;
+            padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .stat {
-            font-size: 48px;
-            font-weight: 700;
+            font-size: 64px;
+            font-weight: 800;
             color: #ff4444;
             line-height: 1;
+            text-shadow: 0 0 40px rgba(255, 68, 68, 0.5);
         }
 
         .stat-label {
@@ -84,32 +96,35 @@
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 5px;
+            margin-top: 8px;
         }
 
         .status {
-            margin-top: 15px;
-            padding: 8px 12px;
-            background: rgba(255, 68, 68, 0.1);
-            border-radius: 6px;
-            font-size: 11px;
+            margin-top: 20px;
+            padding: 10px 14px;
+            background: rgba(255, 68, 68, 0.15);
+            border-radius: 8px;
+            font-size: 12px;
             color: #ff6666;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            border: 1px solid rgba(255, 68, 68, 0.2);
         }
 
         .status.loading {
             color: #888;
             background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .pulse {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             background: #ff4444;
             border-radius: 50%;
-            animation: pulse 2s infinite;
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 10px #ff4444;
         }
 
         @keyframes pulse {
@@ -122,8 +137,45 @@
 
             50% {
                 opacity: 0.5;
-                transform: scale(1.2);
+                transform: scale(1.3);
             }
+        }
+
+        /* Controls */
+        #controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 12px;
+        }
+
+        .control-btn {
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            text-decoration: none;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 68, 68, 0.2);
+            border-color: #ff4444;
+            transform: translateY(-2px);
+        }
+
+        .control-btn.active {
+            background: #ff4444;
+            border-color: #ff4444;
         }
 
         /* Back button */
@@ -134,8 +186,8 @@
             z-index: 100;
             background: rgba(0, 0, 0, 0.9);
             color: #fff;
-            padding: 12px 20px;
-            border-radius: 8px;
+            padding: 14px 24px;
+            border-radius: 10px;
             border: 1px solid #333;
             text-decoration: none;
             font-size: 12px;
@@ -148,20 +200,48 @@
             background: rgba(255, 68, 68, 0.2);
             border-color: #ff4444;
         }
+
+        /* Info panel */
+        #info {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            font-size: 11px;
+            max-width: 280px;
+        }
+
+        #info h3 {
+            margin: 0 0 8px 0;
+            color: #ff4444;
+            font-size: 13px;
+        }
+
+        #info p {
+            margin: 4px 0;
+            color: #888;
+        }
     </style>
 </head>
 
 <body>
     <div id="ui">
         <div class="logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#ff4444" stroke-width="2">
-                <circle cx="12" cy="12" r="10" />
-                <circle cx="12" cy="12" r="3" />
-                <line x1="12" y1="2" x2="12" y2="5" />
-                <line x1="12" y1="19" x2="12" y2="22" />
-                <line x1="2" y1="12" x2="5" y2="12" />
-                <line x1="19" y1="12" x2="22" y2="12" />
-            </svg>
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <circle cx="12" cy="12" r="3" />
+                    <line x1="12" y1="2" x2="12" y2="5" />
+                    <line x1="12" y1="19" x2="12" y2="22" />
+                    <line x1="2" y1="12" x2="5" y2="12" />
+                    <line x1="19" y1="12" x2="22" y2="12" />
+                </svg>
+            </div>
             <div>
                 <h1>Chemical Eye</h1>
                 <p class="subtitle">Orbital Methane Intelligence</p>
@@ -181,17 +261,28 @@
 
     <a href="index.html" id="back">← Back to Home</a>
 
+    <div id="controls">
+        <button class="control-btn" onclick="flyToPermian()">🎯 Permian Basin</button>
+        <button class="control-btn" onclick="flyToGlobal()">🌍 Global View</button>
+        <button class="control-btn" onclick="toggleSpin()">🔄 Auto Rotate</button>
+    </div>
+
+    <div id="info">
+        <h3>📍 Controls</h3>
+        <p>🖱️ Left drag: Rotate</p>
+        <p>🖱️ Right drag: Pan</p>
+        <p>🔍 Scroll: Zoom in/out</p>
+        <p>👆 Click pillar: View details</p>
+    </div>
+
     <div id="cesiumContainer"></div>
 
     <script>
-        // Use OpenStreetMap imagery (no token required)
-        const osmProvider = new Cesium.OpenStreetMapImageryProvider({
-            url: 'https://tile.openstreetmap.org/'
-        });
+        // Set Cesium Ion default access token (free tier)
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYWE1OWUxNy1mMWZiLTQzYjYtYTQ0OS1kMWFjYmFkNjc5YzciLCJpZCI6NjA0MzQsImlhdCI6MTY1OTE0NzI2NH0.R7CaOHrgUjpWBVpGhJ1WlvYzBmXm0lyjhH-OQnVRqZ8';
 
-        // Initialize Cesium Globe
+        // Initialize Cesium Globe with Bing Maps imagery
         const viewer = new Cesium.Viewer('cesiumContainer', {
-            imageryProvider: osmProvider,
             baseLayerPicker: false,
             animation: false,
             timeline: false,
@@ -202,31 +293,72 @@
             fullscreenButton: false,
             infoBox: true,
             selectionIndicator: true,
+            terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        // Style the globe
+        // Enable lighting and atmosphere
+        viewer.scene.globe.enableLighting = false;
         viewer.scene.backgroundColor = Cesium.Color.BLACK;
-        viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#1a1a24');
 
-        // Remove credit container for clean look
+        // Remove credit container
         viewer.cesiumWidget.creditContainer.style.display = "none";
+
+        // Spinning state
+        let isSpinning = false;
+        let spinHandler = null;
+
+        function flyToPermian() {
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(-103, 31.5, 300000),
+                orientation: {
+                    heading: Cesium.Math.toRadians(0),
+                    pitch: Cesium.Math.toRadians(-45),
+                    roll: 0
+                },
+                duration: 2
+            });
+        }
+
+        function flyToGlobal() {
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(-100, 35, 5000000),
+                orientation: {
+                    heading: 0,
+                    pitch: Cesium.Math.toRadians(-90),
+                    roll: 0
+                },
+                duration: 2
+            });
+        }
+
+        function toggleSpin() {
+            isSpinning = !isSpinning;
+            if (isSpinning) {
+                viewer.clock.onTick.addEventListener(spinGlobe);
+            } else {
+                viewer.clock.onTick.removeEventListener(spinGlobe);
+            }
+        }
+
+        function spinGlobe() {
+            viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, 0.002);
+        }
 
         // Fetch and render plumes
         async function loadPlumes() {
             const API_URL = "https://aidenlippert--chemeye-fastapi-app.modal.run/v1/detect/methane";
             const API_KEY = "chem_live_84b7d1107e0542c4af00e33cccaefa567d336c7a4f25637a";
 
-            // Query Permian Basin (Texas oil fields)
             const payload = {
                 bbox: {
-                    min_lon: -105,
-                    min_lat: 30,
-                    max_lon: -100,
-                    max_lat: 34
+                    min_lon: -106,
+                    min_lat: 29,
+                    max_lon: -99,
+                    max_lat: 35
                 },
                 start_date: "2023-01-01",
-                end_date: "2023-12-31",
-                max_granules: 50
+                end_date: "2024-12-31",
+                max_granules: 100
             };
 
             try {
@@ -250,90 +382,75 @@
             <span>${plumes.length} threats identified</span>
           `;
                     document.getElementById('status').classList.remove('loading');
-                } else {
-                    document.getElementById('status').innerHTML = `
-            <span>No active plumes in region</span>
-          `;
                 }
 
-                // Render plumes as glowing pillars
-                plumes.forEach(p => {
+                // Render plumes
+                plumes.forEach((p, i) => {
                     const lat = p.lat;
                     const lon = p.lon;
                     const size = p.plume_size_pixels || 100;
 
-                    // Height represents intensity
-                    const height = Math.max(size * 100, 5000);
-                    const radius = Math.max(size * 5, 500);
+                    const height = Math.min(Math.max(size * 80, 3000), 100000);
+                    const radius = Math.min(Math.max(size * 3, 300), 3000);
 
+                    // Main pillar
                     viewer.entities.add({
+                        name: `Plume ${i + 1}`,
                         position: Cesium.Cartesian3.fromDegrees(lon, lat, height / 2),
                         cylinder: {
                             length: height,
-                            topRadius: radius * 0.3,
+                            topRadius: radius * 0.2,
                             bottomRadius: radius,
-                            material: new Cesium.ColorMaterialProperty(
-                                Cesium.Color.fromCssColorString('#ff2222').withAlpha(0.7)
-                            ),
+                            material: Cesium.Color.fromCssColorString('#ff2222').withAlpha(0.8),
                             outline: true,
-                            outlineColor: Cesium.Color.fromCssColorString('#ff0000'),
+                            outlineColor: Cesium.Color.RED,
                             outlineWidth: 2,
                         },
                         description: `
-              <div style="font-family: sans-serif; padding: 10px;">
-                <h3 style="color: #ff4444; margin: 0 0 10px 0;">🚨 Methane Plume</h3>
-                <p><b>Size:</b> ${size} pixels</p>
-                <p><b>Location:</b> ${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°W</p>
-                <p><b>Detected:</b> ${p.timestamp}</p>
-                <p style="font-size: 11px; color: #666;"><b>Granule:</b> ${p.granule_id}</p>
+              <div style="font-family: system-ui; padding: 15px; background: #1a1a24; border-radius: 8px;">
+                <h2 style="color: #ff4444; margin: 0 0 15px 0; font-size: 18px;">🚨 Methane Plume Detected</h2>
+                <table style="width: 100%; color: #ccc; font-size: 14px;">
+                  <tr><td style="color: #888;">Size</td><td style="font-weight: bold;">${size} pixels</td></tr>
+                  <tr><td style="color: #888;">Latitude</td><td>${lat.toFixed(5)}°</td></tr>
+                  <tr><td style="color: #888;">Longitude</td><td>${lon.toFixed(5)}°</td></tr>
+                  <tr><td style="color: #888;">Detected</td><td>${p.timestamp.split('T')[0]}</td></tr>
+                  <tr><td style="color: #888;">Granule</td><td style="font-size: 11px;">${p.granule_id}</td></tr>
+                </table>
               </div>
             `
                     });
 
-                    // Add ground marker
+                    // Ground glow
                     viewer.entities.add({
                         position: Cesium.Cartesian3.fromDegrees(lon, lat),
                         ellipse: {
-                            semiMinorAxis: radius * 2,
-                            semiMajorAxis: radius * 2,
-                            material: new Cesium.ColorMaterialProperty(
-                                Cesium.Color.fromCssColorString('#ff0000').withAlpha(0.3)
-                            ),
+                            semiMinorAxis: radius * 3,
+                            semiMajorAxis: radius * 3,
+                            material: Cesium.Color.fromCssColorString('#ff0000').withAlpha(0.2),
+                            outline: true,
+                            outlineColor: Cesium.Color.fromCssColorString('#ff4444').withAlpha(0.5),
                         }
                     });
                 });
 
-                // Fly to view all plumes
+                // Fly to plumes
                 if (plumes.length > 0) {
-                    const avgLat = plumes.reduce((sum, p) => sum + p.lat, 0) / plumes.length;
-                    const avgLon = plumes.reduce((sum, p) => sum + p.lon, 0) / plumes.length;
-
-                    viewer.camera.flyTo({
-                        destination: Cesium.Cartesian3.fromDegrees(avgLon, avgLat, 200000),
-                        orientation: {
-                            heading: Cesium.Math.toRadians(0),
-                            pitch: Cesium.Math.toRadians(-45),
-                            roll: 0
-                        },
-                        duration: 3
-                    });
+                    setTimeout(flyToPermian, 1000);
                 }
 
             } catch (err) {
-                console.error("Error loading plumes:", err);
-                document.getElementById('status').innerHTML = `
-          <span style="color: #ff6666;">Error: ${err.message}</span>
-        `;
+                console.error("Error:", err);
+                document.getElementById('status').innerHTML = `<span style="color: #ff6666;">Error: ${err.message}</span>`;
             }
         }
 
-        // Initial camera position (Earth view)
+        // Initial view
         viewer.camera.setView({
-            destination: Cesium.Cartesian3.fromDegrees(-102, 32, 2000000),
+            destination: Cesium.Cartesian3.fromDegrees(-100, 35, 8000000),
         });
 
-        // Load data after globe initializes
-        setTimeout(loadPlumes, 2000);
+        // Load after 1s
+        setTimeout(loadPlumes, 1000);
     </script>
 </body>
 
