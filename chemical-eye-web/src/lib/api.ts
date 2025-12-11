@@ -18,7 +18,7 @@ export function useDetections() {
     { refreshInterval: 10_000 },
   );
 
-  const safeData = Array.isArray(data) ? data : [];
+  const safeData = !error && Array.isArray(data) ? data : [];
 
   return {
     detections: safeData,

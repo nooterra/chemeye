@@ -17,6 +17,21 @@ export function Sidebar() {
   const { detections } = useDetections();
   const data = Array.isArray(detections) ? detections : [];
 
+  if (!Array.isArray(detections)) {
+    return (
+      <Card className="absolute top-4 left-4 w-[350px] h-[calc(100vh-2rem)] bg-black/80 backdrop-blur-md border-zinc-800 text-white shadow-2xl z-50 rounded-xl overflow-hidden flex flex-col">
+        <CardHeader className="pb-2 border-b border-zinc-800">
+          <div className="flex items-center space-x-2">
+            <Terminal className="w-5 h-5 text-red-500" />
+            <CardTitle className="text-lg font-mono tracking-wider">CHEMICAL EYE</CardTitle>
+          </div>
+          <p className="text-xs text-zinc-400 font-mono">GLOBAL METHANE MONITORING SYS</p>
+        </CardHeader>
+        <div className="p-3 text-xs text-zinc-500 font-mono">No detection data.</div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="absolute top-4 left-4 w-[350px] h-[calc(100vh-2rem)] bg-black/80 backdrop-blur-md border-zinc-800 text-white shadow-2xl z-50 rounded-xl overflow-hidden flex flex-col">
       <CardHeader className="pb-2 border-b border-zinc-800">

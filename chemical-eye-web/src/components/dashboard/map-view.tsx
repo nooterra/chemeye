@@ -17,6 +17,10 @@ export function MapView() {
   const { detections } = useDetections();
   const data = Array.isArray(detections) ? detections : [];
 
+  if (!Array.isArray(detections)) {
+    return null;
+  }
+
   const layers = [
     new ScatterplotLayer<Detection>({
       id: "detections-circle",
