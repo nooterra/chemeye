@@ -13,13 +13,13 @@ import os
 import uuid
 from datetime import datetime
 
-import sys
-
 import modal
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-sys.path.insert(0, "/app")
+import sys
+
+sys.path.insert(0, "/app/src")
 
 from chemeye.database import Base, Detection, DetectionStatus
 
