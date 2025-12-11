@@ -32,7 +32,7 @@ def main():
     import earthaccess
 
     try:
-        earthaccess.login()
+        earthaccess.login(strategy="netrc")
     except Exception as e:
         print(f"⚠️ earthaccess login failed: {e}")
 
