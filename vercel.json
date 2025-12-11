@@ -1,9 +1,8 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "rootDirectory": "chemical-eye-web",
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": ".next",
+  "buildCommand": "cd chemical-eye-web && npm install && npm run build",
+  "outputDirectory": "chemical-eye-web/.next",
   "headers": [
     {
       "source": "/(.*)",
