@@ -27,12 +27,7 @@ async def list_recent_detections(
     """
     base_url = str(request.base_url).rstrip("/")
 
-    q = (
-        db.query(Detection)
-        .filter(Detection.detection_type == "methane_amf")
-        .order_by(Detection.created_at.desc())
-        .limit(200)
-    )
+    q = db.query(Detection).order_by(Detection.created_at.desc()).limit(200)
 
     items: list[dict[str, Any]] = []
 
