@@ -18,7 +18,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 import sys
+from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, "/app/src")
 
 from chemeye.database import Base, Detection, DetectionStatus
