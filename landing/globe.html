@@ -252,10 +252,10 @@
     <div id="cesiumContainer"></div>
 
     <script>
-        // Use OpenStreetMap (no token needed)
+        // Use ArcGIS World Imagery (no token needed, CORS-friendly)
         const viewer = new Cesium.Viewer('cesiumContainer', {
-            imageryProvider: new Cesium.OpenStreetMapImageryProvider({
-                url: 'https://a.tile.openstreetmap.org/'
+            imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+                url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
             }),
             baseLayerPicker: false,
             animation: false,
@@ -270,7 +270,7 @@
         });
 
         viewer.scene.backgroundColor = Cesium.Color.BLACK;
-        viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#1a1a24');
+        viewer.scene.globe.enableLighting = false;
         viewer.cesiumWidget.creditContainer.style.display = "none";
 
         let isSpinning = false;
