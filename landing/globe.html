@@ -126,6 +126,23 @@
             }
         }
 
+        /* Data Source Badge */
+        .source-badge {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 10px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .source-badge img {
+            height: 16px;
+            opacity: 0.7;
+        }
+
         #controls {
             position: absolute;
             bottom: 30px;
@@ -174,6 +191,51 @@
             border-color: #ff4444;
             color: #ff4444;
         }
+
+        /* Popup Styling */
+        .maplibregl-popup-content {
+            background: rgba(10, 10, 10, 0.95);
+            color: white;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Inter', sans-serif;
+            min-width: 200px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .maplibregl-popup-close-button {
+            color: #888;
+        }
+
+        .maplibregl-popup-close-button:hover {
+            color: #fff;
+            background: none;
+        }
+
+        .popup-title {
+            color: #ff4444;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .popup-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+
+        .popup-label {
+            color: #888;
+        }
+
+        .popup-val {
+            font-family: 'JetBrains Mono', monospace;
+        }
     </style>
 </head>
 
@@ -192,6 +254,13 @@
         <div class="status" id="status">
             <div class="pulse"></div> Scanning...
         </div>
+
+        <div class="source-badge">
+            <span>DATA SOURCE:</span>
+            <strong style="color: #aaa;">NASA EMIT (JPL)</strong>
+            <span style="color: #444;">•</span>
+            <span>L2B CH4 PLUME COMPLEX</span>
+        </div>
     </div>
 
     <a href="index.html" id="back">Exit</a>
@@ -208,18 +277,17 @@
         // Initialize MapLibre with Globe Projection
         const map = new maplibregl.Map({
             container: 'map',
-            style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json', // Reliable dark theme
-            center: [-98, 38], // US Center
+            style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+            center: [-98, 38],
             zoom: 2,
             pitch: 0,
-            projection: 'globe' // 🌍 THE GLOBE VIEW
+            projection: 'globe'
         });
 
         map.on('style.load', () => {
-            // Set atmosphere / fog for 3D effect
             map.setFog({
-                'color': 'rgb(10, 10, 20)', // Lower atmosphere
-                'high-color': 'rgb(0, 0, 0)', // Upper atmosphere
+                'color': 'rgb(10, 10, 20)',
+                'high-color': 'rgb(0, 0, 0)',
                 'horizon-blend': 0.1,
                 'star-intensity': 0.6
             });
@@ -243,22 +311,11 @@
         }
 
         function flyPermian() {
-            map.flyTo({
-                center: [-103.0, 31.8],
-                zoom: 7, // Zoomed in
-                pitch: 60, // Tilted
-                speed: 1.5,
-                curve: 1
-            });
+            map.flyTo({ center: [-103.0, 31.8], zoom: 7, pitch: 60, speed: 1.5 });
         }
 
         function flyGlobal() {
-            map.flyTo({
-                center: [-98, 38],
-                zoom: 1.5,
-                pitch: 0,
-                speed: 1.5
-            });
+            map.flyTo({ center: [-98, 38], zoom: 1.5, pitch: 0, speed: 1.5 });
         }
 
         async function loadData() {
@@ -282,37 +339,32 @@
                 document.getElementById('count').innerText = detections.length;
                 document.getElementById('status').innerText = "System Online";
 
-                // Convert points to 3D Extruded Circles
                 const features = detections.map(d => {
                     const center = [d.lon, d.lat];
-                    const radius = (d.plume_size_pixels || 100) * 10; // Meters
-
-                    // Create a small circle polygon for extrusion
                     const options = { steps: 16, units: 'meters' };
-                    const circle = turf.circle(center, 2000, options); // Fixed 2km width for visibility
+                    const circle = turf.circle(center, 2000, options);
 
                     circle.properties = {
-                        height: (d.plume_size_pixels || 100) * 50, // Height based on size
+                        height: (d.plume_size_pixels || 100) * 50,
                         base_height: 0,
-                        color: '#ff4444'
+                        color: '#ff4444',
+                        // Data for popup
+                        lat: d.lat.toFixed(5),
+                        lon: d.lon.toFixed(5),
+                        size: d.plume_size_pixels,
+                        date: d.timestamp.split('T')[0],
+                        granule: d.granule_id
                     };
                     return circle;
                 });
 
-                const geojson = {
-                    type: 'FeatureCollection',
-                    features: features
-                };
+                const geojson = { type: 'FeatureCollection', features: features };
 
                 if (map.getSource('plumes')) {
                     map.getSource('plumes').setData(geojson);
                 } else {
-                    map.addSource('plumes', {
-                        'type': 'geojson',
-                        'data': geojson
-                    });
+                    map.addSource('plumes', { 'type': 'geojson', 'data': geojson });
 
-                    // Add 3D Extrusion Layer
                     map.addLayer({
                         'id': 'plumes-3d',
                         'type': 'fill-extrusion',
@@ -325,14 +377,44 @@
                             'fill-extrusion-vertical-gradient': true
                         }
                     });
+
+                    // --- INTERACTIVITY ---
+
+                    // Change cursor on hover
+                    map.on('mouseenter', 'plumes-3d', () => {
+                        map.getCanvas().style.cursor = 'pointer';
+                    });
+                    map.on('mouseleave', 'plumes-3d', () => {
+                        map.getCanvas().style.cursor = '';
+                    });
+
+                    // Click to show popup
+                    map.on('click', 'plumes-3d', (e) => {
+                        const props = e.features[0].properties;
+
+                        const html = `
+                        <div class="popup-title">🚨 METHANE DETECTED</div>
+                        <div class="popup-row"><span class="popup-label">Lat:</span> <span class="popup-val">${props.lat}</span></div>
+                        <div class="popup-row"><span class="popup-label">Lon:</span> <span class="popup-val">${props.lon}</span></div>
+                        <div class="popup-row"><span class="popup-label">Size:</span> <span class="popup-val">${props.size} px</span></div>
+                        <div class="popup-row"><span class="popup-label">Date:</span> <span class="popup-val">${props.date}</span></div>
+                        <div style="margin-top:8px; font-size:10px; color:#666; word-break:break-all;">
+                            ${props.granule}
+                        </div>
+                    `;
+
+                        new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '300px' })
+                            .setLngLat(e.lngLat)
+                            .setHTML(html)
+                            .addTo(map);
+                    });
                 }
 
                 setTimeout(flyPermian, 2000);
 
             } catch (e) {
-                console.error("API Error", e);
+                console.error(e);
                 document.getElementById('status').innerText = "Demo Mode";
-                // Fallback
             }
         }
 
