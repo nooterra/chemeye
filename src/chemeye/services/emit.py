@@ -131,18 +131,38 @@ class EMITService:
     def open_granules(self, granules: list) -> list:
         """
         Open granules for streaming access.
+        
+        Filters to only return NetCDF (.nc) files, skipping JSON/GeoTIFF.
 
         Args:
             granules: List of granule metadata from search
 
         Returns:
-            List of file-like objects for streaming
+            List of file-like objects for streaming (NetCDF only)
         """
         if not granules:
             return []
 
         logger.info(f"Opening {len(granules)} granules for streaming...")
-        return earthaccess.open(granules)
+        all_files = earthaccess.open(granules)
+        
+        # Filter for NetCDF files only
+        nc_files = []
+        for f in all_files:
+            try:
+                # Get the filename from the file object
+                name = getattr(f, 'path', getattr(f, 'name', str(f)))
+                if name.endswith('.nc'):
+                    nc_files.append(f)
+                    logger.debug(f"Including NetCDF file: {name}")
+                else:
+                    logger.debug(f"Skipping non-NetCDF file: {name}")
+            except Exception as e:
+                logger.debug(f"Could not determine file type, including: {e}")
+                nc_files.append(f)  # Include if we can't determine
+        
+        logger.info(f"Filtered to {len(nc_files)} NetCDF files from {len(all_files)} total files")
+        return nc_files
 
     def load_dataset(self, file_obj, engine: str = "h5netcdf") -> Optional[xr.Dataset]:
         """
