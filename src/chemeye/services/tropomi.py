@@ -16,6 +16,7 @@ import earthaccess
 import numpy as np
 import xarray as xr
 from sklearn.cluster import DBSCAN
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +28,23 @@ BACKGROUND_THRESHOLD = 1850.0  # ppb
 QUALITY_THRESHOLD = 0.5  # qa_value
 
 
+def ensure_netrc():
+    """
+    Ensure /root/.netrc exists if provided via env (EARTHDATA_NETRC).
+    """
+    netrc_content = os.environ.get("EARTHDATA_NETRC")
+    if netrc_content:
+        path = "/root/.netrc"
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(netrc_content.strip() + "\n")
+        os.chmod(path, 0o600)
+        os.environ["NETRC"] = path
+
+
 def _load_granule_dataset(granule) -> Optional[xr.Dataset]:
     """Open a single TROPOMI granule via earthaccess."""
     try:
+        ensure_netrc()
         files = earthaccess.open([granule])
         if not files:
             logger.warning("No files returned for TROPOMI granule")

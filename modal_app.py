@@ -50,7 +50,10 @@ volume = modal.Volume.from_name("chemeye-data", create_if_missing=True)
 @app.function(
     image=image,
     volumes={"/data": volume},
-    secrets=[modal.Secret.from_name("chemeye-secrets")],
+    secrets=[
+        modal.Secret.from_name("chemeye-secrets"),
+        modal.Secret.from_name("earthdata-netrc"),
+    ],
     allow_concurrent_inputs=100,
     scaledown_window=300,
 )
@@ -73,7 +76,10 @@ def fastapi_app():
 @app.function(
     image=image,
     volumes={"/data": volume},
-    secrets=[modal.Secret.from_name("chemeye-secrets")],
+    secrets=[
+        modal.Secret.from_name("chemeye-secrets"),
+        modal.Secret.from_name("earthdata-netrc"),
+    ],
     timeout=600,
 )
 def run_methane_detection(
@@ -159,7 +165,10 @@ def run_methane_detection(
 @app.function(
     image=image,
     volumes={"/data": volume},
-    secrets=[modal.Secret.from_name("chemeye-secrets")],
+    secrets=[
+        modal.Secret.from_name("chemeye-secrets"),
+        modal.Secret.from_name("earthdata-netrc"),
+    ],
     timeout=900,
     memory=8192,
     cpu=2.0,
@@ -323,7 +332,10 @@ def process_granule_job(granule_ur: str, detection_id: str) -> dict:
 @app.function(
     image=image,
     volumes={"/data": volume},
-    secrets=[modal.Secret.from_name("chemeye-secrets")],
+    secrets=[
+        modal.Secret.from_name("chemeye-secrets"),
+        modal.Secret.from_name("earthdata-netrc"),
+    ],
     schedule=modal.Cron("0 * * * *"),
     timeout=600,
 )
@@ -347,7 +359,10 @@ def cron_scan_recent():
 @app.function(
     image=image,
     volumes={"/data": volume},
-    secrets=[modal.Secret.from_name("chemeye-secrets")],
+    secrets=[
+        modal.Secret.from_name("chemeye-secrets"),
+        modal.Secret.from_name("earthdata-netrc"),
+    ],
     schedule=modal.Cron("0 */6 * * *"),
     timeout=900,
 )

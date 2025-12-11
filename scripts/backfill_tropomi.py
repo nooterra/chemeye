@@ -29,9 +29,11 @@ LOOKBACK_DAYS = 14
 
 def main():
     from chemeye.workers import update_global_map
+    from chemeye.services.tropomi import ensure_netrc
     import earthaccess
 
     try:
+        ensure_netrc()
         earthaccess.login(strategy="netrc")
     except Exception as e:
         print(f"⚠️ earthaccess login failed: {e}")

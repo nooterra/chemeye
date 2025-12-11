@@ -119,6 +119,7 @@ def update_global_map(hours: int = 24, target_day: datetime | None = None) -> No
     try:
         # ensure Earthdata auth once
         try:
+            tropomi.ensure_netrc()
             earthaccess.login(strategy="netrc")
         except Exception as e:
             logger.warning("Earthaccess login failed: %s", e)
