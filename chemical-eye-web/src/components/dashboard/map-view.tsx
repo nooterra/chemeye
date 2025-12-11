@@ -4,6 +4,7 @@ import React from "react";
 import Map from "react-map-gl";
 import DeckGL from "@deck.gl/react";
 import { ScatterplotLayer, BitmapLayer } from "@deck.gl/layers";
+import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import { useStore } from "@/lib/store";
@@ -12,7 +13,7 @@ import { useDetections } from "@/lib/api";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-type LayerableDetection = Detection & { ageDays?: number };
+type LayerableDetection = Detection & { ageDays?: number; result_json?: any };
 
 function computeAgeDays(ts: string | undefined): number | null {
   if (!ts) return null;
@@ -36,6 +37,29 @@ export function MapView() {
   const tropomiData = data.filter((d) => d.detection_type === "tropomi_hotspot");
 
   const layers = [
+    // TROPOMI heatmap "cloud" to avoid just dots
+    tropomiData.length > 0 &&
+      new HeatmapLayer<LayerableDetection>({
+        id: "tropomi-heatmap",
+        data: tropomiData,
+        getPosition: (d) => [d.lon ?? 0, d.lat ?? 0],
+        getWeight: (d) => {
+          const ppb = (d as any).result_json?.max_ppb ?? d.max_z_score ?? 1;
+          return Math.max(1, Number(ppb) || 1);
+        },
+        radiusPixels: 80,
+        intensity: 1,
+        threshold: 0.05,
+        colorRange: [
+          [255, 245, 190],
+          [255, 235, 150],
+          [255, 220, 100],
+          [255, 200, 40],
+          [230, 160, 20],
+          [200, 120, 10],
+        ],
+      }),
+
     // TROPOMI hotspots: yellow, semi-transparent, large radius
     new ScatterplotLayer<LayerableDetection>({
       id: "tropomi-hotspots",
