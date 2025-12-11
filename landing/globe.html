@@ -19,6 +19,7 @@
         #cesiumContainer {
             width: 100%;
             height: 100%;
+            background: #0a0a0f;
         }
 
         /* War Room UI Overlay */
@@ -27,7 +28,7 @@
             top: 20px;
             left: 20px;
             z-index: 100;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             color: #fff;
             padding: 20px;
             border-radius: 12px;
@@ -131,7 +132,7 @@
             top: 20px;
             right: 20px;
             z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             color: #fff;
             padding: 12px 20px;
             border-radius: 8px;
@@ -183,8 +184,14 @@
     <div id="cesiumContainer"></div>
 
     <script>
-        // Initialize Cesium Globe (no Ion token required)
+        // Use OpenStreetMap imagery (no token required)
+        const osmProvider = new Cesium.OpenStreetMapImageryProvider({
+            url: 'https://tile.openstreetmap.org/'
+        });
+
+        // Initialize Cesium Globe
         const viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: osmProvider,
             baseLayerPicker: false,
             animation: false,
             timeline: false,
@@ -193,13 +200,11 @@
             sceneModePicker: false,
             navigationHelpButton: false,
             fullscreenButton: false,
-            imageryProvider: new Cesium.TileMapServiceImageryProvider({
-                url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
-            }),
+            infoBox: true,
+            selectionIndicator: true,
         });
 
-        // Dark mode atmosphere
-        viewer.scene.globe.enableLighting = false;
+        // Style the globe
         viewer.scene.backgroundColor = Cesium.Color.BLACK;
         viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#1a1a24');
 
@@ -300,12 +305,11 @@
 
                 // Fly to view all plumes
                 if (plumes.length > 0) {
-                    // Calculate center of all plumes
                     const avgLat = plumes.reduce((sum, p) => sum + p.lat, 0) / plumes.length;
                     const avgLon = plumes.reduce((sum, p) => sum + p.lon, 0) / plumes.length;
 
                     viewer.camera.flyTo({
-                        destination: Cesium.Cartesian3.fromDegrees(avgLon, avgLat, 150000),
+                        destination: Cesium.Cartesian3.fromDegrees(avgLon, avgLat, 200000),
                         orientation: {
                             heading: Cesium.Math.toRadians(0),
                             pitch: Cesium.Math.toRadians(-45),
@@ -318,18 +322,18 @@
             } catch (err) {
                 console.error("Error loading plumes:", err);
                 document.getElementById('status').innerHTML = `
-          <span style="color: #ff6666;">Error connecting to API</span>
+          <span style="color: #ff6666;">Error: ${err.message}</span>
         `;
             }
         }
 
         // Initial camera position (Earth view)
         viewer.camera.setView({
-            destination: Cesium.Cartesian3.fromDegrees(-98, 32, 5000000),
+            destination: Cesium.Cartesian3.fromDegrees(-102, 32, 2000000),
         });
 
-        // Load data after short delay for dramatic effect
-        setTimeout(loadPlumes, 1500);
+        // Load data after globe initializes
+        setTimeout(loadPlumes, 2000);
     </script>
 </body>
 
