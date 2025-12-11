@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     environment: Literal["dev", "staging", "prod"] = "dev"
 
     # Database
-    database_url: str = "sqlite:///./data/chemeye.db"
+    database_url: str = "sqlite:////data/chemeye.db"
 
     # NASA EarthData credentials
     nasa_earthdata_username: str = ""
