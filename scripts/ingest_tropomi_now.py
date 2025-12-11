@@ -13,7 +13,7 @@ from datetime import datetime
 
 try:
     import modal
-except ImportError:
+except ImportError:  # pragma: no cover
     modal = None
 
 # Ensure DB path is set when running under Modal or locally
@@ -33,24 +33,29 @@ def main():
     print("Done.")
 
 
+# Modal app definition (always present when modal is installed)
+if modal:
+    app = modal.App("chemeye-tropomi-ingest")
+
+    image = (
+        modal.Image.from_dockerhub("python:3.11-slim")
+        .pip_install_from_requirements("requirements.txt")
+        .env({"PYTHONPATH": "/root:/root/src", "DATABASE_URL": os.environ["DATABASE_URL"]})
+    )
+
+    volume = modal.Volume.from_name("chemeye-data", create_if_missing=True)
+
+    @app.function(image=image, volumes={"/data": volume})
+    def run_ingest():
+        main()
+
+    @app.local_entrypoint()
+    def entrypoint():
+        run_ingest.remote()
+
+
 if __name__ == "__main__":
     if modal:
-        app = modal.App("chemeye-tropomi-ingest")
-
-        image = (
-            modal.Image.from_dockerhub("python:3.11-slim")
-            .pip_install_from_requirements("requirements.txt")
-            .env({"PYTHONPATH": "/root:/root/src", "DATABASE_URL": os.environ["DATABASE_URL"]})
-        )
-
-        volume = modal.Volume.from_name("chemeye-data", create_if_missing=True)
-
-        @app.function(image=image, volumes={"/data": volume})
-        def run_ingest():
-            main()
-
-        @app.local_entrypoint()
-        def entrypoint():
-            run_ingest.remote()
+        entrypoint()
     else:
         main()
