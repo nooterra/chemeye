@@ -38,6 +38,7 @@ image = (
         "python-dotenv>=1.0.0",
     )
     .add_local_dir("src", remote_path="/app", copy=True)
+    .env({"PYTHONPATH": "/app:/app/src"})
 )
 
 
