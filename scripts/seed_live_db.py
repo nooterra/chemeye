@@ -13,6 +13,7 @@ import os
 import uuid
 from datetime import datetime
 
+import modal
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -86,5 +87,6 @@ def seed():
         db.close()
 
 
-if __name__ == "__main__":
+@modal.local_entrypoint()
+def main():
     seed()
