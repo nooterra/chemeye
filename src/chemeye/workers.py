@@ -117,6 +117,12 @@ def update_global_map(hours: int = 24, target_day: datetime | None = None) -> No
     db = SessionLocal()
 
     try:
+        # ensure Earthdata auth once
+        try:
+            earthaccess.login(silent=True)
+        except Exception as e:
+            logger.warning("Earthaccess login failed: %s", e)
+
         today = (target_day.date() if isinstance(target_day, datetime) else target_day) or datetime.utcnow().date()
         hotspots = tropomi.search_daily_hotspots(today)
 

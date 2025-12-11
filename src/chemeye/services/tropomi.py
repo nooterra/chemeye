@@ -30,6 +30,8 @@ QUALITY_THRESHOLD = 0.5  # qa_value
 def _load_granule_dataset(granule) -> Optional[xr.Dataset]:
     """Open a single TROPOMI granule via earthaccess."""
     try:
+        # ensure auth
+        earthaccess.login(silent=True)
         files = earthaccess.open([granule])
         if not files:
             logger.warning("No files returned for TROPOMI granule")
