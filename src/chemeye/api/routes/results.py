@@ -72,6 +72,7 @@ async def list_recent_detections(
                 "id": det.id,
                 "granule_ur": granule_ur,
                 "status": status_upper,
+                "detection_type": det.detection_type,
                 "max_z_score": max_z,
                 "timestamp": (det.completed_at or det.created_at).isoformat() + "Z",
                 "lat": lat,
