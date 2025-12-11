@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Chemical Eye | Global Intelligence</title>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.111/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.111/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* War Room UI Overlay */
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .logo svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 2px;
+            color: #ff4444;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            margin: 0;
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-container {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat {
+            font-size: 48px;
+            font-weight: 700;
+            color: #ff4444;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 8px 12px;
+            background: rgba(255, 68, 68, 0.1);
+            border-radius: 6px;
+            font-size: 11px;
+            color: #ff6666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status.loading {
+            color: #888;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: #ff4444;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Back button */
+        #back {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            text-decoration: none;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        #back:hover {
+            background: rgba(255, 68, 68, 0.2);
+            border-color: #ff4444;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui">
+        <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ff4444" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="3" />
+                <line x1="12" y1="2" x2="12" y2="5" />
+                <line x1="12" y1="19" x2="12" y2="22" />
+                <line x1="2" y1="12" x2="5" y2="12" />
+                <line x1="19" y1="12" x2="22" y2="12" />
+            </svg>
+            <div>
+                <h1>Chemical Eye</h1>
+                <p class="subtitle">Orbital Methane Intelligence</p>
+            </div>
+        </div>
+
+        <div class="stat-container">
+            <div class="stat" id="count">—</div>
+            <p class="stat-label">Active Plumes Detected</p>
+        </div>
+
+        <div class="status loading" id="status">
+            <div class="pulse"></div>
+            <span>Scanning orbital data...</span>
+        </div>
+    </div>
+
+    <a href="index.html" id="back">← Back to Home</a>
+
+    <div id="cesiumContainer"></div>
+
+    <script>
+        // Initialize Cesium Globe
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            terrainProvider: Cesium.createWorldTerrain(),
+            baseLayerPicker: false,
+            animation: false,
+            timeline: false,
+            geocoder: false,
+            homeButton: false,
+            sceneModePicker: false,
+            navigationHelpButton: false,
+            fullscreenButton: false,
+        });
+
+        // Dark mode atmosphere
+        viewer.scene.globe.enableLighting = true;
+        viewer.scene.backgroundColor = Cesium.Color.BLACK;
+
+        // Remove credit container for clean look
+        viewer.cesiumWidget.creditContainer.style.display = "none";
+
+        // Fetch and render plumes
+        async function loadPlumes() {
+            const API_URL = "https://aidenlippert--chemeye-fastapi-app.modal.run/v1/detect/methane";
+            const API_KEY = "chem_live_84b7d1107e0542c4af00e33cccaefa567d336c7a4f25637a";
+
+            // Query Permian Basin (Texas oil fields)
+            const payload = {
+                bbox: {
+                    min_lon: -105,
+                    min_lat: 30,
+                    max_lon: -100,
+                    max_lat: 34
+                },
+                start_date: "2023-01-01",
+                end_date: "2023-12-31",
+                max_granules: 50
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-api-key": API_KEY
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                const plumes = data.detections || [];
+
+                document.getElementById('count').innerText = plumes.length;
+
+                if (plumes.length > 0) {
+                    document.getElementById('status').innerHTML = `
+            <div class="pulse"></div>
+            <span>${plumes.length} threats identified</span>
+          `;
+                    document.getElementById('status').classList.remove('loading');
+                } else {
+                    document.getElementById('status').innerHTML = `
+            <span>No active plumes in region</span>
+          `;
+                }
+
+                // Render plumes as glowing pillars
+                plumes.forEach(p => {
+                    const lat = p.lat;
+                    const lon = p.lon;
+                    const size = p.plume_size_pixels || 100;
+
+                    // Height represents intensity
+                    const height = Math.max(size * 100, 5000);
+                    const radius = Math.max(size * 5, 500);
+
+                    viewer.entities.add({
+                        position: Cesium.Cartesian3.fromDegrees(lon, lat, height / 2),
+                        cylinder: {
+                            length: height,
+                            topRadius: radius * 0.3,
+                            bottomRadius: radius,
+                            material: new Cesium.ColorMaterialProperty(
+                                Cesium.Color.fromCssColorString('#ff2222').withAlpha(0.7)
+                            ),
+                            outline: true,
+                            outlineColor: Cesium.Color.fromCssColorString('#ff0000'),
+                            outlineWidth: 2,
+                        },
+                        description: `
+              <div style="font-family: sans-serif; padding: 10px;">
+                <h3 style="color: #ff4444; margin: 0 0 10px 0;">🚨 Methane Plume</h3>
+                <p><b>Size:</b> ${size} pixels</p>
+                <p><b>Location:</b> ${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°W</p>
+                <p><b>Detected:</b> ${p.timestamp}</p>
+                <p style="font-size: 11px; color: #666;"><b>Granule:</b> ${p.granule_id}</p>
+              </div>
+            `
+                    });
+
+                    // Add ground marker
+                    viewer.entities.add({
+                        position: Cesium.Cartesian3.fromDegrees(lon, lat),
+                        ellipse: {
+                            semiMinorAxis: radius * 2,
+                            semiMajorAxis: radius * 2,
+                            material: new Cesium.ColorMaterialProperty(
+                                Cesium.Color.fromCssColorString('#ff0000').withAlpha(0.3)
+                            ),
+                        }
+                    });
+                });
+
+                // Fly to view all plumes
+                if (plumes.length > 0) {
+                    // Calculate center of all plumes
+                    const avgLat = plumes.reduce((sum, p) => sum + p.lat, 0) / plumes.length;
+                    const avgLon = plumes.reduce((sum, p) => sum + p.lon, 0) / plumes.length;
+
+                    viewer.camera.flyTo({
+                        destination: Cesium.Cartesian3.fromDegrees(avgLon, avgLat, 150000),
+                        orientation: {
+                            heading: Cesium.Math.toRadians(0),
+                            pitch: Cesium.Math.toRadians(-45),
+                            roll: 0
+                        },
+                        duration: 3
+                    });
+                }
+
+            } catch (err) {
+                console.error("Error loading plumes:", err);
+                document.getElementById('status').innerHTML = `
+          <span style="color: #ff6666;">Error connecting to API</span>
+        `;
+            }
+        }
+
+        // Initial camera position (Earth view)
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(-98, 32, 5000000),
+        });
+
+        // Load data after short delay for dramatic effect
+        setTimeout(loadPlumes, 1500);
+    </script>
+</body>
+
+</html>
