@@ -19,11 +19,17 @@ from sqlalchemy.orm import sessionmaker
 
 from chemeye.database import Base, Detection, DetectionStatus
 
+app = modal.App("chemeye-seed")
+volume = modal.Volume.from_name("chemeye-data", create_if_missing=True)
 
+
+@app.function(
+    volumes={"/data": volume},
+    secrets=[modal.Secret.from_name("chemeye-secrets")],
+)
 def seed():
-    db_url = os.environ.get("DATABASE_URL")
-    if not db_url:
-        raise RuntimeError("DATABASE_URL is not set")
+    # Use the same path as the API
+    db_url = os.environ.get("DATABASE_URL", "sqlite:////data/chemeye.db")
 
     engine = create_engine(
         db_url,
@@ -72,7 +78,6 @@ def seed():
                         "centroid_col": 120,
                     }
                 ],
-                # No real overlay, but the frontend will still render the point.
                 "overlay_image_path": None,
                 "zscore_cog_path": None,
             },
@@ -87,6 +92,6 @@ def seed():
         db.close()
 
 
-@modal.local_entrypoint()
+@app.local_entrypoint()
 def main():
-    seed()
+    seed.remote()
