@@ -40,7 +40,8 @@ if modal:
     image = (
         modal.Image.debian_slim(python_version="3.11")
         .pip_install_from_requirements("requirements.txt")
-        .env({"PYTHONPATH": "/root:/root/src", "DATABASE_URL": os.environ["DATABASE_URL"]})
+        .add_local_dir("src/chemeye", remote_path="/app/chemeye", copy=True)
+        .env({"PYTHONPATH": "/root:/root/src:/app", "DATABASE_URL": os.environ["DATABASE_URL"]})
     )
 
     volume = modal.Volume.from_name("chemeye-data", create_if_missing=True)
