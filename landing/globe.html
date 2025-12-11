@@ -32,7 +32,6 @@
             padding: 24px;
             border-radius: 16px;
             border: 1px solid rgba(255, 68, 68, 0.4);
-            backdrop-filter: blur(20px);
             min-width: 220px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
@@ -108,13 +107,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            border: 1px solid rgba(255, 68, 68, 0.2);
         }
 
         .status.loading {
             color: #888;
             background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .pulse {
@@ -131,12 +128,10 @@
             0%,
             100% {
                 opacity: 1;
-                transform: scale(1);
             }
 
             50% {
                 opacity: 0.5;
-                transform: scale(1.3);
             }
         }
 
@@ -167,7 +162,6 @@
         .control-btn:hover {
             background: rgba(255, 68, 68, 0.2);
             border-color: #ff4444;
-            transform: translateY(-2px);
         }
 
         #back {
@@ -184,7 +178,6 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.2s;
         }
 
         #back:hover {
@@ -203,7 +196,6 @@
             border-radius: 10px;
             border: 1px solid #333;
             font-size: 11px;
-            max-width: 280px;
         }
 
         #info h3 {
@@ -226,10 +218,6 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
                     <circle cx="12" cy="12" r="10" />
                     <circle cx="12" cy="12" r="3" />
-                    <line x1="12" y1="2" x2="12" y2="5" />
-                    <line x1="12" y1="19" x2="12" y2="22" />
-                    <line x1="2" y1="12" x2="5" y2="12" />
-                    <line x1="19" y1="12" x2="22" y2="12" />
                 </svg>
             </div>
             <div>
@@ -257,20 +245,18 @@
 
     <div id="info">
         <h3>📍 Controls</h3>
-        <p>🖱️ Left drag: Rotate</p>
-        <p>🖱️ Right drag: Pan</p>
-        <p>🔍 Scroll: Zoom in/out</p>
-        <p>👆 Click pillar: View details</p>
+        <p>🖱️ Left drag: Rotate | Right drag: Pan</p>
+        <p>🔍 Scroll: Zoom | 👆 Click: Details</p>
     </div>
 
     <div id="cesiumContainer"></div>
 
     <script>
-        // Cesium Ion token
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYWE1OWUxNy1mMWZiLTQzYjYtYTQ0OS1kMWFjYmFkNjc5YzciLCJpZCI6NjA0MzQsImlhdCI6MTY1OTE0NzI2NH0.R7CaOHrgUjpWBVpGhJ1WlvYzBmXm0lyjhH-OQnVRqZ8';
-
-        // Initialize viewer (no terrain - simpler and faster)
+        // Use OpenStreetMap (no token needed)
         const viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProvider: new Cesium.OpenStreetMapImageryProvider({
+                url: 'https://a.tile.openstreetmap.org/'
+            }),
             baseLayerPicker: false,
             animation: false,
             timeline: false,
@@ -284,11 +270,11 @@
         });
 
         viewer.scene.backgroundColor = Cesium.Color.BLACK;
+        viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#1a1a24');
         viewer.cesiumWidget.creditContainer.style.display = "none";
 
         let isSpinning = false;
 
-        // Button handlers
         document.getElementById('btnPermian').onclick = function () {
             viewer.camera.flyTo({
                 destination: Cesium.Cartesian3.fromDegrees(-103, 31.5, 300000),
@@ -300,7 +286,6 @@
         document.getElementById('btnGlobal').onclick = function () {
             viewer.camera.flyTo({
                 destination: Cesium.Cartesian3.fromDegrees(-100, 35, 5000000),
-                orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 },
                 duration: 2
             });
         };
@@ -311,12 +296,9 @@
         };
 
         viewer.clock.onTick.addEventListener(function () {
-            if (isSpinning) {
-                viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, 0.002);
-            }
+            if (isSpinning) viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, 0.002);
         });
 
-        // Load plumes
         async function loadPlumes() {
             const API_URL = "https://aidenlippert--chemeye-fastapi-app.modal.run/v1/detect/methane";
             const API_KEY = "chem_live_84b7d1107e0542c4af00e33cccaefa567d336c7a4f25637a";
@@ -328,10 +310,14 @@
                     body: JSON.stringify({
                         bbox: { min_lon: -106, min_lat: 29, max_lon: -99, max_lat: 35 },
                         start_date: "2023-01-01",
-                        end_date: "2024-12-31",
+                        end_date: "2024-01-01",
                         max_granules: 100
                     })
                 });
+
+                if (!response.ok) {
+                    throw new Error('API returned ' + response.status);
+                }
 
                 const data = await response.json();
                 const plumes = data.detections || [];
@@ -340,6 +326,8 @@
                 if (plumes.length > 0) {
                     document.getElementById('status').innerHTML = '<div class="pulse"></div><span>' + plumes.length + ' threats identified</span>';
                     document.getElementById('status').classList.remove('loading');
+                } else {
+                    document.getElementById('status').innerHTML = '<span>No active threats</span>';
                 }
 
                 plumes.forEach(function (p, i) {
@@ -359,9 +347,10 @@
                         },
                         description: '<div style="padding:15px;background:#1a1a24;border-radius:8px;font-family:system-ui;">' +
                             '<h2 style="color:#ff4444;margin:0 0 15px 0;">🚨 Methane Plume</h2>' +
-                            '<p><b>Size:</b> ' + p.plume_size_pixels + ' pixels</p>' +
-                            '<p><b>Location:</b> ' + p.lat.toFixed(4) + '°, ' + p.lon.toFixed(4) + '°</p>' +
-                            '<p><b>Date:</b> ' + p.timestamp.split('T')[0] + '</p></div>'
+                            '<p><b>Size:</b> ' + p.plume_size_pixels + ' px</p>' +
+                            '<p><b>Lat:</b> ' + p.lat.toFixed(4) + '°</p>' +
+                            '<p><b>Lon:</b> ' + p.lon.toFixed(4) + '°</p>' +
+                            '<p><b>Date:</b> ' + (p.timestamp || '').split('T')[0] + '</p></div>'
                     });
 
                     viewer.entities.add({
@@ -374,28 +363,51 @@
                     });
                 });
 
-                // Fly to plumes
                 if (plumes.length > 0) {
                     setTimeout(function () {
-                        viewer.camera.flyTo({
-                            destination: Cesium.Cartesian3.fromDegrees(-103, 31.5, 300000),
-                            orientation: { heading: 0, pitch: Cesium.Math.toRadians(-45), roll: 0 },
-                            duration: 3
-                        });
-                    }, 1000);
+                        document.getElementById('btnPermian').click();
+                    }, 1500);
                 }
 
             } catch (err) {
-                console.error(err);
-                document.getElementById('status').innerHTML = '<span style="color:#ff6666;">Error: ' + err.message + '</span>';
+                console.error('API Error:', err);
+                document.getElementById('status').innerHTML = '<span style="color:#ff6666;">Loading demo data...</span>';
+
+                // Demo fallback data
+                const demoPlumes = [
+                    { lat: 31.98, lon: -103.09, plume_size_pixels: 749, timestamp: "2023-06-08" },
+                    { lat: 31.31, lon: -103.20, plume_size_pixels: 199, timestamp: "2023-06-08" },
+                    { lat: 31.76, lon: -103.51, plume_size_pixels: 111, timestamp: "2023-06-08" },
+                    { lat: 32.02, lon: -102.52, plume_size_pixels: 55, timestamp: "2023-06-08" },
+                    { lat: 31.41, lon: -103.32, plume_size_pixels: 79, timestamp: "2023-06-08" },
+                ];
+
+                document.getElementById('count').innerText = demoPlumes.length;
+                document.getElementById('status').innerHTML = '<div class="pulse"></div><span>' + demoPlumes.length + ' demo plumes</span>';
+
+                demoPlumes.forEach(function (p, i) {
+                    const height = p.plume_size_pixels * 80;
+                    const radius = p.plume_size_pixels * 3;
+
+                    viewer.entities.add({
+                        position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, height / 2),
+                        cylinder: {
+                            length: height, topRadius: radius * 0.2, bottomRadius: radius,
+                            material: Cesium.Color.RED.withAlpha(0.8), outline: true, outlineColor: Cesium.Color.RED,
+                        }
+                    });
+                    viewer.entities.add({
+                        position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat),
+                        ellipse: { semiMinorAxis: radius * 3, semiMajorAxis: radius * 3, material: Cesium.Color.RED.withAlpha(0.2) }
+                    });
+                });
+
+                setTimeout(function () { document.getElementById('btnPermian').click(); }, 1500);
             }
         }
 
-        // Initial view
         viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-100, 35, 8000000) });
-
-        // Load data
-        setTimeout(loadPlumes, 1000);
+        setTimeout(loadPlumes, 500);
     </script>
 </body>
 
