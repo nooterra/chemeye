@@ -45,7 +45,7 @@ export function MapView() {
       <DeckGL
         controller
         viewState={viewState}
-        onViewStateChange={({ viewState }) => setViewState(viewState)}
+        onViewStateChange={({ viewState }) => setViewState(viewState as any)}
         layers={layers as any}
         getTooltip={({ object }) =>
           object && {
@@ -67,4 +67,3 @@ export function MapView() {
     </div>
   );
 }
-

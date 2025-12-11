@@ -8,7 +8,7 @@ interface ViewState {
   zoom: number;
   pitch: number;
   bearing: number;
-  transitionDuration?: number;
+  transitionDuration?: number | "auto";
   transitionInterpolator?: any;
 }
 
@@ -16,7 +16,7 @@ interface DashboardState {
   selectedDetection: Detection | null;
   setSelectedDetection: (detection: Detection | null) => void;
   viewState: ViewState;
-  setViewState: (view: Partial<ViewState>) => void;
+  setViewState: (view: Partial<ViewState> | any) => void;
   flyToDetection: (detection: Detection) => void;
 }
 
@@ -48,4 +48,3 @@ export const useStore = create<DashboardState>((set) => ({
       },
     }),
 }));
-
