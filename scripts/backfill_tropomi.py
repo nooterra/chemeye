@@ -10,7 +10,7 @@ or locally:
 
 import os
 import sys
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 try:
     import modal
@@ -24,77 +24,28 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 
-def store_hotspots(db, day: date, hotspots: list[dict]) -> int:
-    from chemeye.database import Detection, DetectionStatus
-
-    count = 0
-    for h in hotspots:
-        lat = h.get("lat")
-        lon = h.get("lon")
-        if lat is None or lon is None:
-            continue
-        bbox_delta = 0.05
-        bbox = {
-            "min_lon": lon - bbox_delta,
-            "min_lat": lat - bbox_delta,
-            "max_lon": lon + bbox_delta,
-            "max_lat": lat + bbox_delta,
-        }
-        det = Detection(
-            user_id="system",
-            detection_type="tropomi_hotspot",
-            bbox_json=bbox,
-            start_date=day.isoformat(),
-            end_date=day.isoformat(),
-            status=DetectionStatus.DETECTED.value,
-            result_json={
-                "granule_ur": h.get("granule_ur", ""),
-                "max_ppb": h.get("max_ppb"),
-                "mean_ppb": h.get("mean_ppb"),
-                "pixel_count": h.get("pixel_count"),
-                "timestamp": h.get("timestamp"),
-                "plumes": [
-                    {
-                        "lat": lat,
-                        "lon": lon,
-                        "z_score": h.get("z_score"),
-                        "pixel_count": h.get("pixel_count"),
-                    }
-                ],
-                "max_z_score": h.get("z_score"),
-            },
-        )
-        db.add(det)
-        count += 1
-    return count
+LOOKBACK_DAYS = 14
 
 
 def main():
-    from chemeye.database import get_session_maker
-    from chemeye.services import tropomi
+    from chemeye.workers import update_global_map
 
-    Session = get_session_maker()
-    db = Session()
-    ingested = 0
-    try:
-        today = datetime.utcnow().date()
-        for offset in range(0, 7):
-            day = today - timedelta(days=offset)
-            hotspots = tropomi.search_daily_hotspots(day)
-            if not hotspots:
-                print(f"[{day}] no TROPOMI hotspots found")
-                continue
-            ingested = store_hotspots(db, day, hotspots)
-            db.commit()
-            print(
-                f"[{datetime.utcnow().isoformat()}] ✅ Ingested {ingested} hotspots for {day} "
-                f"(stopped after first non-empty day)"
-            )
-            break
-        if ingested == 0:
-            print("No hotspots found in last 7 days.")
-    finally:
-        db.close()
+    today = datetime.utcnow().date()
+    found = False
+
+    for offset in range(LOOKBACK_DAYS):
+        target_day = today - timedelta(days=offset)
+        print(f"[{datetime.utcnow().isoformat()}] 🔎 Checking {target_day} for S5P_L2__CH4____HiR...")
+        try:
+            update_global_map(hours=48, target_day=datetime.combine(target_day, datetime.min.time()))
+            found = True
+            print(f"✅ Ingest attempted for {target_day}. Continuing to next day to enrich coverage.")
+            # continue through window to accumulate multiple days of coverage
+        except Exception as e:
+            print(f"⚠️  Ingest failed for {target_day}: {e}")
+
+    if not found:
+        print("CRITICAL: No TROPOMI data ingested in the last 14 days.")
 
 
 if modal:
@@ -108,7 +59,7 @@ if modal:
     )
     volume = modal.Volume.from_name("chemeye-data", create_if_missing=True)
 
-    @app.function(image=image, volumes={"/data": volume}, timeout=900)
+    @app.function(image=image, volumes={"/data": volume}, timeout=1800)
     def run_backfill():
         main()
 

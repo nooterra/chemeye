@@ -19,8 +19,8 @@ from sklearn.cluster import DBSCAN
 
 logger = logging.getLogger(__name__)
 
-# ESA/NASA short name for Sentinel-5P methane L2
-COLLECTION_SHORTNAME = "S5P_L2__CH4___"
+# ESA/NASA short name for Sentinel-5P methane L2 (HiRes)
+COLLECTION_SHORTNAME = "S5P_L2__CH4____HiR"
 
 # Thresholds
 BACKGROUND_THRESHOLD = 1850.0  # ppb

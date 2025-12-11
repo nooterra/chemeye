@@ -105,7 +105,7 @@ def scan_recent_granules(hours: int = 24) -> list[tuple[str, str]]:
         db.close()
 
 
-def update_global_map(hours: int = 24) -> None:
+def update_global_map(hours: int = 24, target_day: datetime | None = None) -> None:
     """
     Refresh global hotspots from TROPOMI for the last `hours`.
 
@@ -117,7 +117,7 @@ def update_global_map(hours: int = 24) -> None:
     db = SessionLocal()
 
     try:
-        today = datetime.utcnow().date()
+        today = (target_day.date() if isinstance(target_day, datetime) else target_day) or datetime.utcnow().date()
         hotspots = tropomi.search_daily_hotspots(today)
 
         # optional lookback within the same date range
