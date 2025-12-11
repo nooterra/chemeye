@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 export function Sidebar() {
   const { flyToDetection, selectedDetection } = useStore();
   const { detections } = useDetections();
+  const data = Array.isArray(detections) ? detections : [];
 
   return (
     <Card className="absolute top-4 left-4 w-[350px] h-[calc(100vh-2rem)] bg-black/80 backdrop-blur-md border-zinc-800 text-white shadow-2xl z-50 rounded-xl overflow-hidden flex flex-col">
@@ -36,7 +37,7 @@ export function Sidebar() {
             </span>
           </div>
 
-          {detections.map((d: Detection) => (
+          {data.map((d: Detection) => (
             <div
               key={d.id}
               onClick={() => flyToDetection(d)}

@@ -15,12 +15,13 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 export function MapView() {
   const { viewState, setViewState, selectedDetection, setSelectedDetection } = useStore();
   const { detections } = useDetections();
+  const data = Array.isArray(detections) ? detections : [];
 
   const layers = [
     new ScatterplotLayer<Detection>({
       id: "detections-circle",
-      data: detections,
-      getPosition: (d) => [d.lon, d.lat],
+      data,
+      getPosition: (d) => [d.lon ?? 0, d.lat ?? 0],
       getFillColor: [255, 50, 50],
       getRadius: (d) => (d.max_z_score > 7 ? 2000 : 1000),
       radiusMinPixels: 5,
