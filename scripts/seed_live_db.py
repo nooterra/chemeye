@@ -13,17 +13,33 @@ import os
 import uuid
 from datetime import datetime
 
+import sys
+
 import modal
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+sys.path.insert(0, "/app")
 
 from chemeye.database import Base, Detection, DetectionStatus
 
 app = modal.App("chemeye-seed")
 volume = modal.Volume.from_name("chemeye-data", create_if_missing=True)
 
+image = (
+    modal.Image.debian_slim(python_version="3.11")
+    .pip_install(
+        "sqlalchemy>=2.0.0",
+        "pydantic>=2.5.0",
+        "pydantic-settings>=2.1.0",
+        "python-dotenv>=1.0.0",
+    )
+    .add_local_dir("src/chemeye", remote_path="/app/chemeye", copy=True)
+)
+
 
 @app.function(
+    image=image,
     volumes={"/data": volume},
     secrets=[modal.Secret.from_name("chemeye-secrets")],
 )
